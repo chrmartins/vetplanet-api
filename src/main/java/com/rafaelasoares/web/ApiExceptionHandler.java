@@ -1,9 +1,9 @@
 package com.rafaelasoares.web;
 
-import com.rafaelasoares.acesso.exception.CredenciaisInvalidasException;
 import com.rafaelasoares.common.exception.BusinessRuleException;
 import com.rafaelasoares.common.exception.ConflictException;
 import com.rafaelasoares.common.exception.NotFoundException;
+import com.rafaelasoares.common.exception.UnauthorizedException;
 import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -18,12 +18,17 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 /**
  * Traduz exceção de domínio em resposta HTTP.
  *
- * <p>O tratamento é por <b>categoria</b> ({@code NotFoundException},
- * {@code ConflictException}, {@code BusinessRuleException}), não por classe
- * concreta. Assim, quando `cadastro` criar
- * {@code AnimalNaoEncontradoException} ou `agendamento` criar
- * {@code HorarioIndisponivelException}, elas já são tratadas — basta
- * estender a categoria certa. Este arquivo não cresce junto com o sistema.
+ * <p>O tratamento é por <b>categoria</b> ({@code UnauthorizedException},
+ * {@code NotFoundException}, {@code ConflictException},
+ * {@code BusinessRuleException}), não por classe concreta. Assim, quando
+ * `cadastro` criar {@code AnimalNaoEncontradoException} ou `agendamento` criar
+ * {@code HorarioIndisponivelException}, elas já são tratadas — basta estender
+ * a categoria certa. Este arquivo não cresce junto com o sistema.
+ *
+ * <p><b>Esta classe não deve importar nada de um domínio.</b> Um
+ * {@code @ExceptionHandler} apontando para exceção concreta de {@code acesso}
+ * ou {@code agendamento} é o sinal de que falta uma categoria em
+ * {@code common.exception} — crie a categoria, não o método.
  *
  * <p>Todo erro é logado. Não é preciso escrever o id da requisição na
  * mensagem: ele está no MDC e o padrão de log o imprime em toda linha (ver
@@ -35,14 +40,20 @@ public class ApiExceptionHandler {
     private static final Logger log = LoggerFactory.getLogger(ApiExceptionHandler.class);
 
     /**
-     * Credencial inválida → 401.
+     * Falta credencial válida → 401.
      *
-     * <p>Mensagem sempre igual para e-mail inexistente, senha errada e
-     * usuário inativo: diferenciar permitiria descobrir quem tem conta.
+     * <p>A mensagem vem pronta da exceção e é deliberadamente vaga: no login,
+     * diferenciar "e-mail não cadastrado" de "senha errada" permitiria
+     * descobrir quem tem conta.
+     *
+     * <p>Logar é de propósito — tentativa de autenticação que falha é evento
+     * de segurança, e o id da requisição no MDC liga esta linha ao resto do
+     * rastro. A mensagem registrada é a genérica, então não vai e-mail nenhum
+     * para o log.
      */
-    @ExceptionHandler(CredenciaisInvalidasException.class)
-    public ResponseEntity<ErrorResponse> tratarCredenciaisInvalidas(
-            CredenciaisInvalidasException erro) {
+    @ExceptionHandler(UnauthorizedException.class)
+    public ResponseEntity<ErrorResponse> tratarNaoAutenticado(UnauthorizedException erro) {
+        log.info("Falha de autenticação: {}", erro.getMessage());
         return resposta(HttpStatus.UNAUTHORIZED, erro.getMessage());
     }
 
