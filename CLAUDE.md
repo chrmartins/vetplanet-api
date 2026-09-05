@@ -8,8 +8,9 @@ API do sistema **Dra. Rafaela Soares** — atendimento veterinário domiciliar
 > consumidor desta API hoje.
 >
 > Este arquivo é **autocontido de propósito**: num clone limpo deste repo, o
-> `CLAUDE.md` e o `padrao-nomenclatura.md` da pasta-mãe não existem. Tudo que
-> é preciso para trabalhar aqui está abaixo.
+> `CLAUDE.md` da pasta-mãe e o `padrao-nomenclatura.md` — que fica no
+> repositório irmão `rafaela-vet-docs` — não existem. Tudo que é preciso para
+> trabalhar aqui está abaixo.
 
 ## Estado atual
 
