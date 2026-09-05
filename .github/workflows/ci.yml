@@ -1,0 +1,63 @@
+# Build e testes a cada push e pull request.
+#
+# Roda exatamente o mesmo comando que o CLAUDE.md manda rodar localmente antes
+# de considerar qualquer coisa pronta (`./gradlew build`), para não existir a
+# situação de "passa na minha máquina e quebra aqui".
+#
+# Os testes usam Testcontainers, que sobe um Postgres real via Docker — o
+# runner `ubuntu-latest` do GitHub já vem com Docker, então não é preciso
+# declarar `services:` nem configurar banco.
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+# Push novo na mesma branch cancela a execução anterior: o resultado dela já
+# não interessa e o runner fica livre.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+# Só leitura. Este workflow não escreve nada no repositório.
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Build e testes
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - uses: actions/checkout@v7
+
+      # Java 21 — mínimo exigido pelo Spring Boot 4 e o que o toolchain do
+      # build.gradle declara.
+      - name: Configurar Java 21
+        uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: "21"
+
+      # Cuida do cache do Gradle (dependências e build cache) e valida o
+      # checksum do wrapper — impede que um wrapper adulterado execute código
+      # arbitrário no runner.
+      - name: Configurar Gradle
+        uses: gradle/actions/setup-gradle@v6
+
+      - name: Build e testes
+        run: ./gradlew build --no-daemon
+
+      # Só quando quebra: o relatório é o que diz *qual* teste falhou sem
+      # precisar decifrar o log do passo anterior.
+      - name: Publicar relatório de testes
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: relatorio-de-testes
+          path: |
+            build/reports/tests/test
+            build/test-results/test
+          retention-days: 7
