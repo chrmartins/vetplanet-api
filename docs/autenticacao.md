@@ -245,11 +245,11 @@ protegido, em vez de depender de alguém lembrar de anotá-lo.
 | Arquivo | Papel |
 |---|---|
 | `config/SecurityConfig` | rotas públicas, filtro, `@EnableMethodSecurity` |
-| `config/TokenAutenticacaoFilter` | lê o `Bearer` e autentica a requisição |
+| `acesso/filter/TokenAutenticacaoFilter` | lê o `Bearer` e autentica a requisição |
 | `acesso/service/TokenGenerator` | gera o token e calcula o SHA-256 |
 | `acesso/service/CriarSessaoService` | login |
 | `acesso/service/EncerrarSessaoService` | logout e revogação em massa |
-| `acesso/entity/TokenAutenticacao` | a sessão; `estaValida()` |
+| `acesso/entity/TokenAutenticacaoEntity` | a sessão; `estaValida()` |
 | `V002__acesso_criar_token_autenticacao.sql` | a tabela |
 
 ---

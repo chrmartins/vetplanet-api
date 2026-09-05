@@ -13,17 +13,17 @@ API do sistema **Dra. Rafaela Soares** — atendimento veterinário domiciliar
 
 ## Estado atual
 
-Esqueleto recém-criado. **Existe**: build Gradle, Docker Compose com Postgres,
-`application.yml`, e a migração `V001` criando o schema `acesso` e a tabela
-`usuario`.
+O domínio **`acesso` está pronto**: usuários do painel (CRUD com hash BCrypt),
+sessão por token opaco, autorização por perfil e troca de senha — com 18
+testes cobrindo entidade e controllers. As migrações `V001` e `V002` criam o
+schema `acesso` com as tabelas `usuario` e `token_autenticacao`.
 
-**Ainda não existe**: nenhuma entidade, repository, service, controller ou
-configuração de segurança. O primeiro trabalho é a fatia vertical de
-`acesso`/`usuario` (CRUD + hash de senha), que é o que destrava o login do
-painel.
+Também já existem, transversais a todos os domínios: envelope único de erro
+por categoria, id de correlação por requisição, **CI no GitHub Actions** e
+**documentação OpenAPI** (dev).
 
-⚠️ A migração `V001` **ainda não foi executada** contra o banco — o Flyway
-roda no primeiro `bootRun`. Confirme que ela aplica antes de seguir.
+**Ainda não existe**: nenhum outro domínio. O próximo trabalho é `cadastro`
+(tutores e animais), que é o que destrava o agendamento.
 
 ## Stack
 
@@ -54,6 +54,22 @@ para o jar de produção — lá o banco é externo).
 docker compose down       # desliga o banco (mantém os dados)
 docker compose down -v    # desliga e APAGA os dados
 ```
+
+Com a aplicação de pé, a documentação da API fica em
+**<http://localhost:8080/swagger-ui.html>** e a spec em `/v3/api-docs`.
+Só existe no perfil `dev` — ver "Documentação da API (OpenAPI)".
+
+## Integração contínua
+
+`.github/workflows/ci.yml` roda `./gradlew build` a cada push na `main` e em
+todo pull request. É **o mesmo comando** que se roda localmente, de propósito:
+não deve existir a situação de "passa aqui e quebra lá".
+
+Os testes usam Testcontainers, que sobe um Postgres real — o runner
+`ubuntu-latest` já tem Docker, então não é preciso declarar `services:` nem
+configurar banco no workflow. Quando o build quebra, o relatório de testes
+sobe como artefato (`relatorio-de-testes`), que é o que diz *qual* teste
+falhou sem precisar decifrar o log.
 
 `lifecycle-management: start-only` faz o banco continuar de pé ao parar a
 aplicação — sem isso, cada Ctrl+C derrubaria o contêiner e o próximo start
@@ -96,14 +112,20 @@ Domínio no topo, **camadas dentro dele**. `acesso` é o modelo a copiar:
 
 ```
 acesso/
-  controller/    UsuarioController          entrada HTTP
-  service/       CriarUsuarioService...     um por caso de uso
-  repository/    UsuarioRepository          acesso a dados
-  entity/        Usuario, PerfilAcesso      modelo de domínio
-  dto/           CriarUsuarioRequest,
-                 UsuarioResponse            contrato da API
-  exception/     UsuarioNaoEncontrado...    erros do domínio
+  controller/    UsuarioController              entrada HTTP
+  service/       CriarUsuarioService...         um por caso de uso
+  repository/    UsuarioRepository              acesso a dados
+  entity/        UsuarioEntity, PerfilAcesso    modelo de domínio
+  dto/           CriarUsuarioRequestDto,
+                 UsuarioResponseDto             contrato da API
+  exception/     UsuarioNaoEncontrado...        erros do domínio
+  filter/        TokenAutenticacaoFilter        filtro HTTP do domínio (opcional)
+  config/        DevSeedConfig                  beans só deste domínio (opcional)
 ```
+
+As duas últimas são **opcionais** — existem quando o domínio precisa delas, e
+`acesso` é o único caso hoje. A regra para criar uma: o que está lá dentro só
+faz sentido para este domínio.
 
 Assim a fronteira que importa continua sendo `acesso.*` vs `cadastro.*` — um
 domínio novo não mexe em pasta de outro — e dentro de cada um fica óbvio onde
@@ -114,6 +136,38 @@ precisa ser `public`, então o compilador não impede mais `agendamento` de
 importá-lo. A regra de "não acessar dado de outro domínio" passa a valer por
 disciplina. Se isso começar a ser violado, o caminho é um teste de
 arquitetura (ArchUnit) que quebre o build — não voltar a achatar os pacotes.
+
+### O que vive fora dos domínios
+
+Há três pacotes que não pertencem a domínio nenhum. **Cada um tem uma regra
+diferente sobre poder ou não conhecer um domínio** — é isso que impede
+qualquer um deles de virar gaveta de bagunça:
+
+| Pacote | O que é | Pode importar de um domínio? |
+|---|---|---|
+| `common/` | vocabulário compartilhado entre domínios (hoje só a hierarquia de exceções) | **Nunca** |
+| `web/` | borda HTTP genérica: handler de erro, envelope de erro, id de correlação | **Nunca** |
+| `config/` | *composition root* — fiação do Spring e política da aplicação | **Sim**, é o trabalho dele |
+
+O critério para `common/` e `web/`: se a classe cita `Usuario`, `Consulta` ou
+qualquer conceito da clínica, ela **não** é genérica — é de um domínio, e o
+lugar dela é lá dentro. Um `import com.rafaelasoares.<dominio>` aparecendo em
+`common/` ou `web/` é o sinal de que a abstração está furada.
+
+O caso concreto que já aconteceu: o `ApiExceptionHandler` tinha um
+`@ExceptionHandler` para `CredenciaisInvalidasException`, exceção do domínio
+`acesso`, porque **faltava a categoria de 401** em `common/exception/`. A
+correção certa foi criar `UnauthorizedException` como quarta categoria — não
+manter o método dedicado. Se tivesse ficado, `agendamento` e `prontuario`
+copiariam o precedente e o handler viraria a lista de todos os domínios.
+
+O `config/` é a exceção porque fiação é literalmente a função dele: o
+`SecurityConfig` precisa injetar o `TokenAutenticacaoFilter` de `acesso` para
+montar o filter chain, e não há como declarar política de segurança da
+aplicação sem tocar em quem autentica. O que **não** vale é o inverso — deixar
+em `config/` uma classe que é de um domínio só porque é onde os exemplos de
+Spring põem filtros. Foi o que aconteceu com `TokenAutenticacaoFilter` e
+`DevSeedConfig`, hoje em `acesso/filter/` e `acesso/config/`.
 
 ## Nomenclatura
 
@@ -126,12 +180,23 @@ universal de programação fala inglês. Vale igualmente no frontend.
 | Controller | `<Entidade>Controller` | `UsuarioController` |
 | Service | `<Ação><Entidade>Service` | `CriarUsuarioService`, `InativarUsuarioService` |
 | Repository | `<Entidade>Repository` | `UsuarioRepository` |
-| Entity | `<Entidade>` (sem sufixo) | `Usuario`, `Consulta`, `Tutor` |
-| DTO entrada | `<Ação><Entidade>Request` | `CriarUsuarioRequest` |
-| DTO saída | `<Entidade>Response` | `UsuarioResponse` |
+| Entity | `<Entidade>Entity` | `UsuarioEntity`, `ConsultaEntity`, `TutorEntity` |
+| DTO entrada | `<Ação><Entidade>RequestDto` | `CriarUsuarioRequestDto` |
+| DTO saída | `<Entidade>ResponseDto` | `UsuarioResponseDto` |
 | Evento | `<Entidade><FatoOcorrido>Event` | `UsuarioCriadoEvent` |
 | Exception | `<Situacao>Exception` | `EmailJaCadastradoException` |
 
+- **Toda classe carrega o sufixo da sua camada**, para o fluxo
+  `Controller → Service → Repository → Entity` se ler na própria linha, sem
+  consultar o import. Em DTO, `Request`/`Response` vêm **antes** do `Dto`
+  (`CriarUsuarioRequestDto`, não `CriarUsuarioDto`) — o sufixo diz a camada, o
+  que vem antes dele diz a direção do fluxo.
+- **Nem tudo numa pasta de camada é daquela camada.** `PerfilAcesso` fica em
+  `entity/` e não leva sufixo (é enum de domínio, não tabela); `TokenGenerator`
+  fica em `service/` e não leva sufixo (é utilitário técnico, não caso de uso).
+- **Renomear entity exige olhar o JPQL**: o nome em `@Query` é o nome simples
+  da classe, então a string tem de mudar junto ou a aplicação quebra no boot.
+  O `@Table(name = ...)` não muda — a tabela continua `usuario`, sem sufixo.
 - **Uma classe de service por caso de uso**, com o verbo explícito —
   `CriarUsuarioService`, nunca `UsuarioService` genérico ou `UsuarioManager`.
 - **Métodos em português** (são ação de negócio): `criarUsuario(...)`,
@@ -162,22 +227,71 @@ GET    /api/sessoes/atual                  usuário logado + perfil
 DELETE /api/sessoes/atual                  encerrar sessão
 ```
 
+## Documentação da API (OpenAPI)
+
+Gerada pelo **springdoc-openapi 3.1.0** a partir dos controllers e dos DTOs.
+
+⚠️ **A versão importa.** A série 3.x é a que suporta Spring Boot 4 (a 3.1.0 é
+construída sobre o `spring-boot-starter-parent` 4.1.0, a mesma linha usada
+aqui); a série 2.x é para Boot 3.x e não serve. Cuidado adicional: o **índice
+de busca** do Maven Central ainda lista apenas 2.x — quem manda é o
+`maven-metadata.xml` do repositório.
+
+**Fica desligada por padrão e só liga no perfil `dev`.** O default seguro está
+em `application.yml` (`springdoc.*.enabled: false`) e o opt-in em
+`application-dev.yml`. É deliberado: a documentação mapeia endpoints que
+manipulam CPF e prontuário, e um default ligado falharia *aberto* se alguém
+esquecesse de configurar o perfil em produção.
+
+São **duas travas independentes**, não uma:
+
+1. o springdoc não sobe (`springdoc.api-docs.enabled: false`);
+2. o `SecurityConfig` lê essa mesma propriedade e, com `false`, nem adiciona
+   as rotas de documentação ao filter chain — em produção elas caem no
+   `anyRequest().authenticated()` e devolvem 401.
+
+**Ao criar um domínio novo**, siga o padrão que `acesso` estabeleceu:
+
+- `@Tag` na classe do controller, nomeado `"<Domínio> — <recurso>"`
+  (`"Acesso — usuários"`), que é o que agrupa e ordena na tela;
+- `@Operation(summary = ...)` em cada método, com o *porquê* quando houver
+  regra não óbvia (por que a senha não entra no update, por que a mensagem de
+  erro é vaga);
+- endpoint público leva `@SecurityRequirements` vazio, para anular a
+  exigência global de token — hoje só o `POST /api/sessoes`.
+
+O `OpenApiConfig` fica em `config/` porque descreve a API inteira. Pela regra
+da seção "O que vive fora dos domínios", ele **não importa nada de domínio** —
+o que é específico de um domínio é declarado no controller dele.
+
 ## Erros e observabilidade
 
 **Exceções são tratadas por categoria, não por classe.** Toda exceção de
-negócio estende uma das três em `common/exception/`:
+negócio estende uma das quatro em `common/exception/`:
 
 | Categoria | HTTP | Quando |
 |---|---|---|
+| `UnauthorizedException` | 401 | falta credencial válida (não autenticado) |
 | `NotFoundException` | 404 | recurso não existe |
 | `ConflictException` | 409 | conflita com dado existente (unicidade, concorrência) |
 | `BusinessRuleException` | 422 | requisição válida, mas fere regra de domínio |
+
+401 e 403 são coisas diferentes: `UnauthorizedException` é "não sei quem você
+é"; 403 é "sei quem você é e você não pode", e quem gera é o
+`AccessDeniedException` do Spring Security, tratado à parte. Subclasse de
+`UnauthorizedException` **não pode revelar qual parte da credencial falhou** —
+distinguir "e-mail não existe" de "senha errada" permite enumerar contas.
 
 Cada domínio cria as suas em `<dominio>/exception/`, com nome que descreve a
 situação em português — `UsuarioNaoEncontradoException`,
 `HorarioIndisponivelException` — estendendo a categoria certa. **O
 `ApiExceptionHandler` não precisa de método novo a cada exceção**; ele trata
-as três categorias e cobre todos os domínios futuros.
+as quatro categorias e cobre todos os domínios futuros.
+
+Se nenhuma categoria servir, **acrescente uma quinta** em `common/exception/`.
+O que não vale é estender `DomainException` direto e pedir um
+`@ExceptionHandler` dedicado: isso faz o handler crescer a cada domínio, que é
+justamente o que a hierarquia existe para evitar.
 
 Se o problema for o *formato* do dado, isso é 400 e quem resolve é o Bean
 Validation nos DTOs — não uma exceção de domínio.
@@ -263,7 +377,7 @@ protegido**.
   adiantaria a senha nova se a sessão do invasor seguisse aberta.
 - Não se pode inativar nem rebaixar o **último administrador ativo** — sem
   isso o sistema ficaria trancado, sem ninguém para reativar alguém.
-- **`TokenAutenticacaoFilter` não pode levar `@Transactional`.** Isso faria o
+- **`acesso/filter/TokenAutenticacaoFilter` não pode levar `@Transactional`.** Isso faria o
   Spring proxiá-lo com CGLIB; o proxy é criado sem chamar o construtor, o
   `logger` herdado de `GenericFilterBean` fica nulo e a aplicação quebra no
   boot. Por isso a consulta usa `join fetch` para trazer o usuário.
@@ -276,7 +390,7 @@ redefinição de senha pelo administrador.
 - Dados de tutor (CPF, endereço) e **prontuário são dados pessoais
   sensíveis**.
 - Senha **sempre** com hash (BCrypt). Nunca texto puro, nunca em log, nunca
-  em resposta de API — `UsuarioResponse` não expõe `senhaHash`.
+  em resposta de API — `UsuarioResponseDto` não expõe `senhaHash`.
 - **Nenhuma exclusão física** de usuário, consulta ou prontuário — sempre
   inativação por status (`ativo`, `status_consulta`).
 - **Prontuário é imutável após confirmado** — correção gera registro de
