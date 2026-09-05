@@ -1,6 +1,6 @@
 package com.rafaelasoares.acesso.service;
 
-import com.rafaelasoares.acesso.dto.UsuarioResponse;
+import com.rafaelasoares.acesso.dto.UsuarioResponseDto;
 import com.rafaelasoares.acesso.repository.UsuarioRepository;
 import java.util.List;
 import org.springframework.stereotype.Service;
@@ -21,9 +21,9 @@ public class ListarUsuariosService {
      * desativado para poder reativar. Filtrar fica a cargo da tela.
      */
     @Transactional(readOnly = true)
-    public List<UsuarioResponse> listarUsuarios() {
+    public List<UsuarioResponseDto> listarUsuarios() {
         return usuarioRepository.findAllByOrderByNomeCompletoAsc().stream()
-                .map(UsuarioResponse::de)
+                .map(UsuarioResponseDto::de)
                 .toList();
     }
 }

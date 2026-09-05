@@ -9,4 +9,4 @@ import java.time.OffsetDateTime;
  * hash. Quem consome é o servidor do Next, que o coloca num cookie httpOnly;
  * o navegador nunca vê este valor em JavaScript.
  */
-public record SessaoResponse(String token, OffsetDateTime expiraEm, UsuarioResponse usuario) {}
+public record SessaoResponseDto(String token, OffsetDateTime expiraEm, UsuarioResponseDto usuario) {}

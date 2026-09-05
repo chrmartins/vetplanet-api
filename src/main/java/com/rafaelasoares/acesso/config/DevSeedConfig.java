@@ -1,7 +1,7 @@
-package com.rafaelasoares.config;
+package com.rafaelasoares.acesso.config;
 
 import com.rafaelasoares.acesso.entity.PerfilAcesso;
-import com.rafaelasoares.acesso.entity.Usuario;
+import com.rafaelasoares.acesso.entity.UsuarioEntity;
 import com.rafaelasoares.acesso.repository.UsuarioRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -44,7 +44,7 @@ public class DevSeedConfig {
             }
 
             usuarioRepository.save(
-                    Usuario.criar(
+                    UsuarioEntity.criar(
                             "Administrador de Desenvolvimento",
                             email,
                             passwordEncoder.encode(senha),

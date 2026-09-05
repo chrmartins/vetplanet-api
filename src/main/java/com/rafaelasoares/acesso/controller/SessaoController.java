@@ -1,11 +1,14 @@
 package com.rafaelasoares.acesso.controller;
 
-import com.rafaelasoares.acesso.dto.CriarSessaoRequest;
-import com.rafaelasoares.acesso.dto.SessaoResponse;
-import com.rafaelasoares.acesso.dto.UsuarioResponse;
+import com.rafaelasoares.acesso.dto.CriarSessaoRequestDto;
+import com.rafaelasoares.acesso.dto.SessaoResponseDto;
+import com.rafaelasoares.acesso.dto.UsuarioResponseDto;
 import com.rafaelasoares.acesso.service.BuscarUsuarioAtualService;
 import com.rafaelasoares.acesso.service.CriarSessaoService;
 import com.rafaelasoares.acesso.service.EncerrarSessaoService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirements;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import java.security.Principal;
 import org.springframework.http.HttpHeaders;
@@ -26,6 +29,7 @@ import org.springframework.web.bind.annotation.RestController;
  */
 @RestController
 @RequestMapping("/api/sessoes")
+@Tag(name = "Acesso — sessões", description = "Entrar no painel, saber quem está logado, sair.")
 public class SessaoController {
 
     private static final String PREFIXO_BEARER = "Bearer ";
@@ -44,18 +48,33 @@ public class SessaoController {
     }
 
     /** Entrar. Único endpoint público da API. */
+    @Operation(
+            summary = "Autenticar e abrir sessão",
+            description =
+                    "Devolve um token opaco válido por 12h. O token aparece uma única vez, "
+                            + "aqui — o banco guarda só o hash. Mensagem de erro é idêntica "
+                            + "para e-mail inexistente, senha errada e usuário inativo, para "
+                            + "não permitir descobrir quem tem conta.")
+    // Anula a exigência global de token: é justamente o endpoint que fornece um.
+    @SecurityRequirements
     @PostMapping
-    public SessaoResponse entrar(@Valid @RequestBody CriarSessaoRequest request) {
+    public SessaoResponseDto entrar(@Valid @RequestBody CriarSessaoRequestDto request) {
         return criarSessaoService.criarSessao(request);
     }
 
     /** Quem está logado — o painel usa para montar o cabeçalho e o menu. */
+    @Operation(
+            summary = "Usuário da sessão atual",
+            description = "O painel usa para montar o cabeçalho e decidir o que exibir no menu.")
     @GetMapping("/atual")
-    public UsuarioResponse sessaoAtual(Principal principal) {
+    public UsuarioResponseDto sessaoAtual(Principal principal) {
         return buscarUsuarioAtualService.buscarUsuarioAtual(principal.getName());
     }
 
     /** Sair. Revoga o token; o mesmo valor não autentica mais. */
+    @Operation(
+            summary = "Encerrar a sessão",
+            description = "Revoga o token no banco — o mesmo valor deixa de autenticar na hora.")
     @DeleteMapping("/atual")
     public ResponseEntity<Void> sair(
             @RequestHeader(HttpHeaders.AUTHORIZATION) String cabecalhoAutorizacao) {

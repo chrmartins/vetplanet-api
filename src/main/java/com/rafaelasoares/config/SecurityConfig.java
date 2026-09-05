@@ -1,6 +1,9 @@
 package com.rafaelasoares.config;
 
+import com.rafaelasoares.acesso.config.DevSeedConfig;
+import com.rafaelasoares.acesso.filter.TokenAutenticacaoFilter;
 import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -30,10 +33,31 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 @EnableMethodSecurity
 public class SecurityConfig {
 
+    /**
+     * Rotas que o springdoc serve. Só são liberadas quando a documentação está
+     * ligada — ver {@link #documentacaoHabilitada}.
+     */
+    private static final String[] CAMINHOS_DA_DOCUMENTACAO = {
+        "/v3/api-docs", "/v3/api-docs/**", "/swagger-ui.html", "/swagger-ui/**"
+    };
+
     private final TokenAutenticacaoFilter tokenAutenticacaoFilter;
 
-    public SecurityConfig(TokenAutenticacaoFilter tokenAutenticacaoFilter) {
+    /**
+     * Espelha {@code springdoc.api-docs.enabled}, que é {@code false} por
+     * padrão e só vira {@code true} no perfil {@code dev}.
+     *
+     * <p>O default aqui também é {@code false}: se a propriedade sumir do
+     * yml, a documentação continua fechada. Falhar fechado é o que se quer
+     * numa API que trata CPF e prontuário.
+     */
+    private final boolean documentacaoHabilitada;
+
+    public SecurityConfig(
+            TokenAutenticacaoFilter tokenAutenticacaoFilter,
+            @Value("${springdoc.api-docs.enabled:false}") boolean documentacaoHabilitada) {
         this.tokenAutenticacaoFilter = tokenAutenticacaoFilter;
+        this.documentacaoHabilitada = documentacaoHabilitada;
     }
 
     /**
@@ -61,17 +85,21 @@ public class SecurityConfig {
                 .sessionManagement(
                         sessao -> sessao.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(
-                        rotas ->
-                                rotas
-                                        // Entrar precisa ser público — é o
-                                        // único jeito de obter um token.
-                                        .requestMatchers(HttpMethod.POST, "/api/sessoes")
-                                        .permitAll()
-                                        // Health check do orquestrador.
-                                        .requestMatchers("/actuator/health")
-                                        .permitAll()
-                                        .anyRequest()
-                                        .authenticated())
+                        rotas -> {
+                            // Entrar precisa ser público — é o único jeito de
+                            // obter um token.
+                            rotas.requestMatchers(HttpMethod.POST, "/api/sessoes").permitAll();
+                            // Health check do orquestrador.
+                            rotas.requestMatchers("/actuator/health").permitAll();
+                            // A documentação entra no filter chain apenas
+                            // quando ligada. Em produção estas rotas não são
+                            // liberadas aqui — e o springdoc nem sobe —, então
+                            // são duas travas independentes, não uma.
+                            if (documentacaoHabilitada) {
+                                rotas.requestMatchers(CAMINHOS_DA_DOCUMENTACAO).permitAll();
+                            }
+                            rotas.anyRequest().authenticated();
+                        })
                 // Sem autenticação → 401 com corpo vazio, em vez do 403 que o
                 // Spring devolveria por padrão. 401 é o correto: falta
                 // credencial, não é permissão negada.

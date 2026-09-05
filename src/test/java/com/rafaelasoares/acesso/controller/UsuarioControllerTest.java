@@ -1,7 +1,7 @@
 package com.rafaelasoares.acesso.controller;
 
 import com.rafaelasoares.TestcontainersConfiguration;
-import com.rafaelasoares.acesso.entity.Usuario;
+import com.rafaelasoares.acesso.entity.UsuarioEntity;
 import com.rafaelasoares.acesso.repository.TokenAutenticacaoRepository;
 import com.rafaelasoares.acesso.repository.UsuarioRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -93,7 +93,7 @@ class UsuarioControllerTest {
         assertThat(corpo).doesNotContain("senhaHash").doesNotContain("$2a$");
 
         // E a senha foi guardada como hash, não em texto puro.
-        Usuario salvo =
+        UsuarioEntity salvo =
                 usuarioRepository.findByEmailIgnoreCase("rafaela@rafaelasoares.vet").orElseThrow();
         assertThat(salvo.getSenhaHash()).isNotEqualTo("senhaSegura123").startsWith("$2");
     }

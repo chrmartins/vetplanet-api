@@ -26,6 +26,15 @@ dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-validation'
 	implementation 'org.springframework.boot:spring-boot-starter-webmvc'
 	implementation 'org.flywaydb:flyway-database-postgresql'
+	// OpenAPI/Swagger. A 3.1.0 é construída sobre o spring-boot-starter-parent
+	// 4.1.0 — mesma linha do Boot usado aqui. A série 2.x é para Boot 3.x e
+	// NÃO serve. Atenção: o índice de busca do Maven Central ainda lista só
+	// 2.x; quem manda é o maven-metadata.xml do repositório.
+	//
+	// A documentação fica DESLIGADA por padrão e só liga no perfil `dev`
+	// (ver application.yml / application-dev.yml). É proposital: ela mapeia
+	// endpoints que manipulam CPF e prontuário.
+	implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:3.1.0'
 	compileOnly 'org.projectlombok:lombok'
 	// Sobe o docker-compose.yml junto com a aplicação e espera o banco ficar
 	// saudável antes de conectar. É o que faz `./gradlew bootRun` bastar.

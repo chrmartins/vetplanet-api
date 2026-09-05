@@ -1,7 +1,7 @@
 package com.rafaelasoares.acesso.service;
 
-import com.rafaelasoares.acesso.dto.UsuarioResponse;
-import com.rafaelasoares.acesso.entity.Usuario;
+import com.rafaelasoares.acesso.dto.UsuarioResponseDto;
+import com.rafaelasoares.acesso.entity.UsuarioEntity;
 import com.rafaelasoares.acesso.exception.CredenciaisInvalidasException;
 import com.rafaelasoares.acesso.repository.UsuarioRepository;
 import org.springframework.stereotype.Service;
@@ -24,7 +24,7 @@ public class BuscarUsuarioAtualService {
 
     /** Entidade — para quem precisa agir sobre o usuário. */
     @Transactional(readOnly = true)
-    public Usuario buscarEntidade(String email) {
+    public UsuarioEntity buscarEntidade(String email) {
         return usuarioRepository
                 .findByEmailIgnoreCase(email)
                 // Sessão válida cujo usuário sumiu: trata como não autenticado.
@@ -33,7 +33,7 @@ public class BuscarUsuarioAtualService {
 
     /** DTO — para devolver ao cliente. */
     @Transactional(readOnly = true)
-    public UsuarioResponse buscarUsuarioAtual(String email) {
-        return UsuarioResponse.de(buscarEntidade(email));
+    public UsuarioResponseDto buscarUsuarioAtual(String email) {
+        return UsuarioResponseDto.de(buscarEntidade(email));
     }
 }

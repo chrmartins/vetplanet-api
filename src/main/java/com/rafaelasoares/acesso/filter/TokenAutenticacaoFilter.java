@@ -1,7 +1,7 @@
-package com.rafaelasoares.config;
+package com.rafaelasoares.acesso.filter;
 
-import com.rafaelasoares.acesso.entity.TokenAutenticacao;
-import com.rafaelasoares.acesso.entity.Usuario;
+import com.rafaelasoares.acesso.entity.TokenAutenticacaoEntity;
+import com.rafaelasoares.acesso.entity.UsuarioEntity;
 import com.rafaelasoares.acesso.repository.TokenAutenticacaoRepository;
 import com.rafaelasoares.acesso.service.TokenGenerator;
 import jakarta.servlet.FilterChain;
@@ -59,14 +59,14 @@ public class TokenAutenticacaoFilter extends OncePerRequestFilter {
         if (token != null && SecurityContextHolder.getContext().getAuthentication() == null) {
             tokenRepository
                     .buscarPorTokenHashComUsuario(tokenGenerator.hash(token))
-                    .filter(TokenAutenticacao::estaValida)
+                    .filter(TokenAutenticacaoEntity::estaValida)
                     .ifPresent(sessao -> autenticar(sessao.getUsuario(), requisicao));
         }
 
         cadeia.doFilter(requisicao, resposta);
     }
 
-    private void autenticar(Usuario usuario, HttpServletRequest requisicao) {
+    private void autenticar(UsuarioEntity usuario, HttpServletRequest requisicao) {
         // Prefixo ROLE_ é o que hasRole('ADMINISTRADOR') espera encontrar.
         var permissoes =
                 List.of(new SimpleGrantedAuthority("ROLE_" + usuario.getPerfilAcesso().name()));

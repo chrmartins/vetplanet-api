@@ -13,7 +13,7 @@ import jakarta.validation.constraints.Size;
  * outras regras (confirmação, exigir a senha atual), e misturar as duas
  * facilitaria alterar credencial sem querer.
  */
-public record AtualizarUsuarioRequest(
+public record AtualizarUsuarioRequestDto(
         @NotBlank(message = "Informe o nome completo.")
                 @Size(max = 120, message = "Nome completo muito longo.")
                 String nomeCompleto,

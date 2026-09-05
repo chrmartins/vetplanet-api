@@ -1,6 +1,6 @@
 package com.rafaelasoares.acesso.service;
 
-import com.rafaelasoares.acesso.entity.TokenAutenticacao;
+import com.rafaelasoares.acesso.entity.TokenAutenticacaoEntity;
 import com.rafaelasoares.acesso.repository.TokenAutenticacaoRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -44,8 +44,8 @@ public class EncerrarSessaoService {
 
     /** Derruba todas as sessões abertas de um usuário. */
     @Transactional
-    public void encerrarSessoesDoUsuario(com.rafaelasoares.acesso.entity.Usuario usuario) {
-        for (TokenAutenticacao sessao :
+    public void encerrarSessoesDoUsuario(com.rafaelasoares.acesso.entity.UsuarioEntity usuario) {
+        for (TokenAutenticacaoEntity sessao :
                 tokenRepository.findByUsuarioAndRevogadoEmIsNull(usuario)) {
             sessao.revogar();
         }

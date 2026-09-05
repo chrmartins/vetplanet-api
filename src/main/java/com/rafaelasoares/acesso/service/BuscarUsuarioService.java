@@ -1,6 +1,6 @@
 package com.rafaelasoares.acesso.service;
 
-import com.rafaelasoares.acesso.dto.UsuarioResponse;
+import com.rafaelasoares.acesso.dto.UsuarioResponseDto;
 import com.rafaelasoares.acesso.exception.UsuarioNaoEncontradoException;
 import com.rafaelasoares.acesso.repository.UsuarioRepository;
 import java.util.UUID;
@@ -18,10 +18,10 @@ public class BuscarUsuarioService {
     }
 
     @Transactional(readOnly = true)
-    public UsuarioResponse buscarUsuario(UUID idUsuario) {
+    public UsuarioResponseDto buscarUsuario(UUID idUsuario) {
         return usuarioRepository
                 .findById(idUsuario)
-                .map(UsuarioResponse::de)
+                .map(UsuarioResponseDto::de)
                 .orElseThrow(() -> new UsuarioNaoEncontradoException(idUsuario));
     }
 }

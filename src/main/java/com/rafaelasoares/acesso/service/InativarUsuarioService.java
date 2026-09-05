@@ -1,8 +1,8 @@
 package com.rafaelasoares.acesso.service;
 
-import com.rafaelasoares.acesso.dto.UsuarioResponse;
+import com.rafaelasoares.acesso.dto.UsuarioResponseDto;
 import com.rafaelasoares.acesso.entity.PerfilAcesso;
-import com.rafaelasoares.acesso.entity.Usuario;
+import com.rafaelasoares.acesso.entity.UsuarioEntity;
 import com.rafaelasoares.acesso.exception.UltimoAdministradorException;
 import com.rafaelasoares.acesso.exception.UsuarioNaoEncontradoException;
 import com.rafaelasoares.acesso.repository.UsuarioRepository;
@@ -33,8 +33,8 @@ public class InativarUsuarioService {
     }
 
     @Transactional
-    public UsuarioResponse inativarUsuario(UUID idUsuario) {
-        Usuario usuario =
+    public UsuarioResponseDto inativarUsuario(UUID idUsuario) {
+        UsuarioEntity usuario =
                 usuarioRepository
                         .findById(idUsuario)
                         .orElseThrow(() -> new UsuarioNaoEncontradoException(idUsuario));
@@ -48,10 +48,10 @@ public class InativarUsuarioService {
         encerrarSessaoService.encerrarSessoesDoUsuario(usuario);
 
         log.info("Usuário {} inativado; sessões encerradas", usuario.getEmail());
-        return UsuarioResponse.de(usuario);
+        return UsuarioResponseDto.de(usuario);
     }
 
-    private void garantirQueSobraAdministrador(Usuario alvo) {
+    private void garantirQueSobraAdministrador(UsuarioEntity alvo) {
         boolean ehAdministradorAtivo =
                 alvo.isAtivo() && alvo.getPerfilAcesso() == PerfilAcesso.ADMINISTRADOR;
         if (!ehAdministradorAtivo) {

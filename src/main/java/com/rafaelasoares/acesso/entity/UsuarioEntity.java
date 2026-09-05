@@ -26,7 +26,7 @@ import java.util.UUID;
  */
 @Entity
 @Table(name = "usuario", schema = "acesso")
-public class Usuario {
+public class UsuarioEntity {
 
     @Id
     @GeneratedValue
@@ -62,9 +62,9 @@ public class Usuario {
     private OffsetDateTime atualizadoEm;
 
     /** Exigido pelo JPA — não usar no código da aplicação. */
-    protected Usuario() {}
+    protected UsuarioEntity() {}
 
-    private Usuario(
+    private UsuarioEntity(
             String nomeCompleto, String email, String senhaHash, PerfilAcesso perfilAcesso) {
         this.nomeCompleto = nomeCompleto.trim();
         this.email = normalizarEmail(email);
@@ -90,9 +90,9 @@ public class Usuario {
      * @param senhaHash já codificada com BCrypt — este método não recebe nem
      *     conhece senha em texto puro.
      */
-    public static Usuario criar(
+    public static UsuarioEntity criar(
             String nomeCompleto, String email, String senhaHash, PerfilAcesso perfilAcesso) {
-        return new Usuario(nomeCompleto, email, senhaHash, perfilAcesso);
+        return new UsuarioEntity(nomeCompleto, email, senhaHash, perfilAcesso);
     }
 
     /** Atualiza os dados cadastrais. A senha tem caminho próprio. */
@@ -159,7 +159,7 @@ public class Usuario {
     @Override
     public boolean equals(Object outro) {
         if (this == outro) return true;
-        if (!(outro instanceof Usuario usuario)) return false;
+        if (!(outro instanceof UsuarioEntity usuario)) return false;
         return id != null && id.equals(usuario.id);
     }
 
@@ -171,7 +171,7 @@ public class Usuario {
     /** Sem senha nem hash no toString, para não vazar em log. */
     @Override
     public String toString() {
-        return "Usuario{id=%s, email=%s, perfilAcesso=%s, ativo=%s}"
+        return "UsuarioEntity{id=%s, email=%s, perfilAcesso=%s, ativo=%s}"
                 .formatted(id, email, perfilAcesso, ativo);
     }
 }

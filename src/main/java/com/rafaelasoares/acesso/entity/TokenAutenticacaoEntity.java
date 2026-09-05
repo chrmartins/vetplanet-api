@@ -21,7 +21,7 @@ import java.util.UUID;
  */
 @Entity
 @Table(name = "token_autenticacao", schema = "acesso")
-public class TokenAutenticacao {
+public class TokenAutenticacaoEntity {
 
     @Id
     @GeneratedValue
@@ -30,7 +30,7 @@ public class TokenAutenticacao {
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "id_usuario", nullable = false, updatable = false)
-    private Usuario usuario;
+    private UsuarioEntity usuario;
 
     @Column(name = "token_hash", nullable = false, updatable = false)
     private String tokenHash;
@@ -45,17 +45,17 @@ public class TokenAutenticacao {
     private OffsetDateTime revogadoEm;
 
     /** Exigido pelo JPA — não usar no código da aplicação. */
-    protected TokenAutenticacao() {}
+    protected TokenAutenticacaoEntity() {}
 
-    private TokenAutenticacao(Usuario usuario, String tokenHash, Duration validade) {
+    private TokenAutenticacaoEntity(UsuarioEntity usuario, String tokenHash, Duration validade) {
         this.usuario = usuario;
         this.tokenHash = tokenHash;
         this.criadoEm = OffsetDateTime.now(ZoneOffset.UTC);
         this.expiraEm = this.criadoEm.plus(validade);
     }
 
-    public static TokenAutenticacao criar(Usuario usuario, String tokenHash, Duration validade) {
-        return new TokenAutenticacao(usuario, tokenHash, validade);
+    public static TokenAutenticacaoEntity criar(UsuarioEntity usuario, String tokenHash, Duration validade) {
+        return new TokenAutenticacaoEntity(usuario, tokenHash, validade);
     }
 
     /** Logout: a sessão para de autenticar imediatamente. */
@@ -79,7 +79,7 @@ public class TokenAutenticacao {
         return id;
     }
 
-    public Usuario getUsuario() {
+    public UsuarioEntity getUsuario() {
         return usuario;
     }
 
@@ -90,7 +90,7 @@ public class TokenAutenticacao {
     /** Sem o hash no toString, para não vazar em log. */
     @Override
     public String toString() {
-        return "TokenAutenticacao{id=%s, idUsuario=%s, expiraEm=%s, revogado=%s}"
+        return "TokenAutenticacaoEntity{id=%s, idUsuario=%s, expiraEm=%s, revogado=%s}"
                 .formatted(id, usuario == null ? null : usuario.getId(), expiraEm, revogadoEm != null);
     }
 }

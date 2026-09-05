@@ -1,0 +1,23 @@
+# Perfil `dev` — desenvolvimento local. Ativado automaticamente pelo
+# `./gradlew bootRun` (ver build.gradle). Um `java -jar`, como sobe em
+# produção, NÃO passa por aqui.
+#
+# É também o perfil que semeia o administrador inicial
+# (acesso/config/DevSeedConfig).
+
+springdoc:
+  # Liga a documentação. O default em application.yml é `false`, então isto
+  # aqui é a única forma de ela existir — e só vale localmente.
+  api-docs:
+    enabled: true
+    path: /v3/api-docs
+  swagger-ui:
+    enabled: true
+    path: /swagger-ui.html
+    # Ordena por nome em vez da ordem de declaração: com sete domínios no
+    # futuro, a ordem de declaração não ajuda ninguém a achar nada.
+    operations-sorter: alpha
+    tags-sorter: alpha
+    # Mantém o token digitado entre reloads da página — sem isso, cada F5
+    # obriga a colar o token de novo.
+    persist-authorization: true

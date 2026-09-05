@@ -9,7 +9,7 @@ import jakarta.validation.constraints.Size;
  * <p>Exige a senha atual de propósito: sem isso, quem pegasse uma sessão
  * aberta (máquina destravada) trocaria a senha e tomaria a conta.
  */
-public record TrocarSenhaRequest(
+public record TrocarSenhaRequestDto(
         @NotBlank(message = "Informe a senha atual.") String senhaAtual,
         @NotBlank(message = "Informe a nova senha.")
                 @Size(min = 8, max = 72, message = "A senha deve ter entre 8 e 72 caracteres.")
@@ -18,6 +18,6 @@ public record TrocarSenhaRequest(
     /** Sem senhas no toString — este objeto pode acabar em log de erro. */
     @Override
     public String toString() {
-        return "TrocarSenhaRequest{}";
+        return "TrocarSenhaRequestDto{}";
     }
 }

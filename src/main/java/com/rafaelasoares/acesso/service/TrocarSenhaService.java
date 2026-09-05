@@ -1,7 +1,7 @@
 package com.rafaelasoares.acesso.service;
 
-import com.rafaelasoares.acesso.dto.TrocarSenhaRequest;
-import com.rafaelasoares.acesso.entity.Usuario;
+import com.rafaelasoares.acesso.dto.TrocarSenhaRequestDto;
+import com.rafaelasoares.acesso.entity.UsuarioEntity;
 import com.rafaelasoares.acesso.exception.CredenciaisInvalidasException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -36,8 +36,8 @@ public class TrocarSenhaService {
     }
 
     @Transactional
-    public void trocarSenha(String emailDoUsuarioLogado, TrocarSenhaRequest request) {
-        Usuario usuario = buscarUsuarioAtualService.buscarEntidade(emailDoUsuarioLogado);
+    public void trocarSenha(String emailDoUsuarioLogado, TrocarSenhaRequestDto request) {
+        UsuarioEntity usuario = buscarUsuarioAtualService.buscarEntidade(emailDoUsuarioLogado);
 
         if (!passwordEncoder.matches(request.senhaAtual(), usuario.getSenhaHash())) {
             log.info("Troca de senha rejeitada para {}: senha atual incorreta", usuario.getEmail());

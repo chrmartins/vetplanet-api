@@ -1,8 +1,8 @@
 package com.rafaelasoares.acesso.service;
 
-import com.rafaelasoares.acesso.dto.CriarUsuarioRequest;
-import com.rafaelasoares.acesso.dto.UsuarioResponse;
-import com.rafaelasoares.acesso.entity.Usuario;
+import com.rafaelasoares.acesso.dto.CriarUsuarioRequestDto;
+import com.rafaelasoares.acesso.dto.UsuarioResponseDto;
+import com.rafaelasoares.acesso.entity.UsuarioEntity;
 import com.rafaelasoares.acesso.exception.EmailJaCadastradoException;
 import com.rafaelasoares.acesso.repository.UsuarioRepository;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -23,7 +23,7 @@ public class CriarUsuarioService {
     }
 
     @Transactional
-    public UsuarioResponse criarUsuario(CriarUsuarioRequest request) {
+    public UsuarioResponseDto criarUsuario(CriarUsuarioRequestDto request) {
         // Checagem antecipada para devolver 409 com mensagem clara. O índice
         // único do banco continua sendo a garantia real contra corrida entre
         // dois cadastros simultâneos.
@@ -31,13 +31,13 @@ public class CriarUsuarioService {
             throw new EmailJaCadastradoException(request.email());
         }
 
-        Usuario usuario =
-                Usuario.criar(
+        UsuarioEntity usuario =
+                UsuarioEntity.criar(
                         request.nomeCompleto(),
                         request.email(),
                         passwordEncoder.encode(request.senha()),
                         request.perfilAcesso());
 
-        return UsuarioResponse.de(usuarioRepository.save(usuario));
+        return UsuarioResponseDto.de(usuarioRepository.save(usuario));
     }
 }

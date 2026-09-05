@@ -1,9 +1,9 @@
 package com.rafaelasoares.acesso.service;
 
-import com.rafaelasoares.acesso.dto.AtualizarUsuarioRequest;
-import com.rafaelasoares.acesso.dto.UsuarioResponse;
+import com.rafaelasoares.acesso.dto.AtualizarUsuarioRequestDto;
+import com.rafaelasoares.acesso.dto.UsuarioResponseDto;
 import com.rafaelasoares.acesso.entity.PerfilAcesso;
-import com.rafaelasoares.acesso.entity.Usuario;
+import com.rafaelasoares.acesso.entity.UsuarioEntity;
 import com.rafaelasoares.acesso.exception.EmailJaCadastradoException;
 import com.rafaelasoares.acesso.exception.UltimoAdministradorException;
 import com.rafaelasoares.acesso.exception.UsuarioNaoEncontradoException;
@@ -23,8 +23,8 @@ public class AtualizarUsuarioService {
     }
 
     @Transactional
-    public UsuarioResponse atualizarUsuario(UUID idUsuario, AtualizarUsuarioRequest request) {
-        Usuario usuario =
+    public UsuarioResponseDto atualizarUsuario(UUID idUsuario, AtualizarUsuarioRequestDto request) {
+        UsuarioEntity usuario =
                 usuarioRepository
                         .findById(idUsuario)
                         .orElseThrow(() -> new UsuarioNaoEncontradoException(idUsuario));
@@ -41,14 +41,14 @@ public class AtualizarUsuarioService {
 
         // Sem save() explícito: a entidade está gerenciada dentro da transação,
         // então o Hibernate persiste a mudança no commit.
-        return UsuarioResponse.de(usuario);
+        return UsuarioResponseDto.de(usuario);
     }
 
     /**
      * Rebaixar o último administrador tranca todo mundo do lado de fora tanto
      * quanto inativá-lo, então a trava vale aqui também.
      */
-    private void garantirQueSobraAdministrador(Usuario usuario, PerfilAcesso novoPerfil) {
+    private void garantirQueSobraAdministrador(UsuarioEntity usuario, PerfilAcesso novoPerfil) {
         boolean deixaDeSerAdministrador =
                 usuario.isAtivo()
                         && usuario.getPerfilAcesso() == PerfilAcesso.ADMINISTRADOR

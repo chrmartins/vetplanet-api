@@ -11,7 +11,7 @@ import jakarta.validation.constraints.Size;
  *
  * <p>Não há auto-cadastro: quem cria usuário é o administrador.
  */
-public record CriarUsuarioRequest(
+public record CriarUsuarioRequestDto(
         @NotBlank(message = "Informe o nome completo.")
                 @Size(max = 120, message = "Nome completo muito longo.")
                 String nomeCompleto,

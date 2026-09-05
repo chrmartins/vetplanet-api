@@ -1,10 +1,10 @@
 package com.rafaelasoares.acesso.service;
 
-import com.rafaelasoares.acesso.dto.CriarSessaoRequest;
-import com.rafaelasoares.acesso.dto.SessaoResponse;
-import com.rafaelasoares.acesso.dto.UsuarioResponse;
-import com.rafaelasoares.acesso.entity.TokenAutenticacao;
-import com.rafaelasoares.acesso.entity.Usuario;
+import com.rafaelasoares.acesso.dto.CriarSessaoRequestDto;
+import com.rafaelasoares.acesso.dto.SessaoResponseDto;
+import com.rafaelasoares.acesso.dto.UsuarioResponseDto;
+import com.rafaelasoares.acesso.entity.TokenAutenticacaoEntity;
+import com.rafaelasoares.acesso.entity.UsuarioEntity;
 import com.rafaelasoares.acesso.exception.CredenciaisInvalidasException;
 import com.rafaelasoares.acesso.repository.TokenAutenticacaoRepository;
 import com.rafaelasoares.acesso.repository.UsuarioRepository;
@@ -43,8 +43,8 @@ public class CriarSessaoService {
     }
 
     @Transactional
-    public SessaoResponse criarSessao(CriarSessaoRequest request) {
-        Optional<Usuario> encontrado = usuarioRepository.findByEmailIgnoreCase(request.email());
+    public SessaoResponseDto criarSessao(CriarSessaoRequestDto request) {
+        Optional<UsuarioEntity> encontrado = usuarioRepository.findByEmailIgnoreCase(request.email());
 
         // Compara a senha mesmo quando o e-mail não existe. Sem isso, a
         // resposta volta mais rápido para e-mail inexistente do que para senha
@@ -58,7 +58,7 @@ public class CriarSessaoService {
                                     return false;
                                 });
 
-        Usuario usuario = encontrado.orElse(null);
+        UsuarioEntity usuario = encontrado.orElse(null);
         if (!senhaConfere || usuario == null || !usuario.isAtivo()) {
             // Log com o e-mail tentado ajuda a investigar; a resposta ao
             // cliente continua genérica.
@@ -67,13 +67,13 @@ public class CriarSessaoService {
         }
 
         String token = tokenGenerator.gerar();
-        TokenAutenticacao sessao =
-                TokenAutenticacao.criar(usuario, tokenGenerator.hash(token), validadeDaSessao);
+        TokenAutenticacaoEntity sessao =
+                TokenAutenticacaoEntity.criar(usuario, tokenGenerator.hash(token), validadeDaSessao);
         tokenRepository.save(sessao);
 
         log.info("Sessão aberta para {}", usuario.getEmail());
         // Única vez em que o token existe fora do cliente.
-        return new SessaoResponse(token, sessao.getExpiraEm(), UsuarioResponse.de(usuario));
+        return new SessaoResponseDto(token, sessao.getExpiraEm(), UsuarioResponseDto.de(usuario));
     }
 
     /**

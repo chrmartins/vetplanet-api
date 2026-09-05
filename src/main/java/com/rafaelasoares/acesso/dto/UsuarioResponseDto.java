@@ -1,7 +1,7 @@
 package com.rafaelasoares.acesso.dto;
 
 import com.rafaelasoares.acesso.entity.PerfilAcesso;
-import com.rafaelasoares.acesso.entity.Usuario;
+import com.rafaelasoares.acesso.entity.UsuarioEntity;
 import java.time.OffsetDateTime;
 import java.util.UUID;
 
@@ -12,7 +12,7 @@ import java.util.UUID;
  * justamente para que a entidade não seja serializada direto — assim é
  * impossível o hash vazar por descuido numa resposta.
  */
-public record UsuarioResponse(
+public record UsuarioResponseDto(
         UUID idUsuario,
         String nomeCompleto,
         String email,
@@ -21,8 +21,8 @@ public record UsuarioResponse(
         OffsetDateTime criadoEm,
         OffsetDateTime atualizadoEm) {
 
-    public static UsuarioResponse de(Usuario usuario) {
-        return new UsuarioResponse(
+    public static UsuarioResponseDto de(UsuarioEntity usuario) {
+        return new UsuarioResponseDto(
                 usuario.getId(),
                 usuario.getNomeCompleto(),
                 usuario.getEmail(),

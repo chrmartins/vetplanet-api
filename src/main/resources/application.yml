@@ -38,6 +38,22 @@ spring:
     default-schema: public
     locations: classpath:db/migration
 
+# Documentação da API: DESLIGADA por padrão, ligada só no perfil `dev`
+# (application-dev.yml).
+#
+# O default seguro é aqui de propósito: se um dia alguém esquecer de definir o
+# perfil em produção, a documentação continua fora do ar. O contrário — ligado
+# por padrão e desligado em prod — falharia aberto, expondo o mapa dos
+# endpoints que manipulam CPF e prontuário.
+#
+# O SecurityConfig lê `springdoc.api-docs.enabled` para decidir se libera as
+# rotas: com `false`, elas nem existem no filter chain.
+springdoc:
+  api-docs:
+    enabled: false
+  swagger-ui:
+    enabled: false
+
 server:
   port: ${PORTA_HTTP:8080}
   error:

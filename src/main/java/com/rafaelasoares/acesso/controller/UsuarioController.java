@@ -1,15 +1,17 @@
 package com.rafaelasoares.acesso.controller;
 
-import com.rafaelasoares.acesso.dto.AtualizarUsuarioRequest;
-import com.rafaelasoares.acesso.dto.CriarUsuarioRequest;
-import com.rafaelasoares.acesso.dto.TrocarSenhaRequest;
-import com.rafaelasoares.acesso.dto.UsuarioResponse;
+import com.rafaelasoares.acesso.dto.AtualizarUsuarioRequestDto;
+import com.rafaelasoares.acesso.dto.CriarUsuarioRequestDto;
+import com.rafaelasoares.acesso.dto.TrocarSenhaRequestDto;
+import com.rafaelasoares.acesso.dto.UsuarioResponseDto;
 import com.rafaelasoares.acesso.service.AtualizarUsuarioService;
 import com.rafaelasoares.acesso.service.BuscarUsuarioService;
 import com.rafaelasoares.acesso.service.CriarUsuarioService;
 import com.rafaelasoares.acesso.service.InativarUsuarioService;
 import com.rafaelasoares.acesso.service.ListarUsuariosService;
 import com.rafaelasoares.acesso.service.TrocarSenhaService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import java.net.URI;
 import java.security.Principal;
@@ -42,6 +44,11 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/api/usuarios")
 @PreAuthorize("hasRole('ADMINISTRADOR')")
+@Tag(
+        name = "Acesso — usuários",
+        description =
+                "Gestão dos usuários do painel. Exige perfil ADMINISTRADOR, exceto a troca da"
+                        + " própria senha. Não existe auto-cadastro.")
 public class UsuarioController {
 
     private final CriarUsuarioService criarUsuarioService;
@@ -66,31 +73,45 @@ public class UsuarioController {
         this.trocarSenhaService = trocarSenhaService;
     }
 
+    @Operation(
+            summary = "Criar usuário",
+            description = "A senha entra com hash BCrypt e nunca volta em resposta de API.")
     @PostMapping
-    public ResponseEntity<UsuarioResponse> criar(@Valid @RequestBody CriarUsuarioRequest request) {
-        UsuarioResponse usuario = criarUsuarioService.criarUsuario(request);
+    public ResponseEntity<UsuarioResponseDto> criar(@Valid @RequestBody CriarUsuarioRequestDto request) {
+        UsuarioResponseDto usuario = criarUsuarioService.criarUsuario(request);
         URI localizacao = URI.create("/api/usuarios/" + usuario.idUsuario());
         return ResponseEntity.created(localizacao).body(usuario);
     }
 
+    @Operation(summary = "Listar usuários", description = "Ordenados por nome completo.")
     @GetMapping
-    public List<UsuarioResponse> listar() {
+    public List<UsuarioResponseDto> listar() {
         return listarUsuariosService.listarUsuarios();
     }
 
+    @Operation(summary = "Buscar usuário por id")
     @GetMapping("/{idUsuario}")
-    public UsuarioResponse buscar(@PathVariable UUID idUsuario) {
+    public UsuarioResponseDto buscar(@PathVariable UUID idUsuario) {
         return buscarUsuarioService.buscarUsuario(idUsuario);
     }
 
+    @Operation(
+            summary = "Atualizar dados cadastrais",
+            description =
+                    "Senha não entra aqui — trocar senha é outra operação, com outras regras.")
     @PutMapping("/{idUsuario}")
-    public UsuarioResponse atualizar(
-            @PathVariable UUID idUsuario, @Valid @RequestBody AtualizarUsuarioRequest request) {
+    public UsuarioResponseDto atualizar(
+            @PathVariable UUID idUsuario, @Valid @RequestBody AtualizarUsuarioRequestDto request) {
         return atualizarUsuarioService.atualizarUsuario(idUsuario, request);
     }
 
+    @Operation(
+            summary = "Inativar usuário",
+            description =
+                    "Não há exclusão física (LGPD). Inativar derruba as sessões abertas. O"
+                            + " último administrador ativo não pode ser inativado.")
     @PatchMapping("/{idUsuario}/inativar")
-    public UsuarioResponse inativar(@PathVariable UUID idUsuario) {
+    public UsuarioResponseDto inativar(@PathVariable UUID idUsuario) {
         return inativarUsuarioService.inativarUsuario(idUsuario);
     }
 
@@ -101,11 +122,16 @@ public class UsuarioController {
      * perfil de administrador para alguém trocar a senha dela mesma. O alvo
      * vem da sessão, nunca da URL, então não há como mexer na conta de outro.
      */
+    @Operation(
+            summary = "Trocar a própria senha",
+            description =
+                    "Qualquer perfil, sobre a própria conta — o alvo vem da sessão, nunca da"
+                            + " URL. Exige a senha atual e derruba todas as sessões.")
     @PatchMapping("/atual/senha")
     @PreAuthorize("isAuthenticated()")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void trocarSenha(
-            Principal principal, @Valid @RequestBody TrocarSenhaRequest request) {
+            Principal principal, @Valid @RequestBody TrocarSenhaRequestDto request) {
         trocarSenhaService.trocarSenha(principal.getName(), request);
     }
 }

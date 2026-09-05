@@ -1,6 +1,6 @@
 package com.rafaelasoares.acesso.service;
 
-import com.rafaelasoares.acesso.entity.Usuario;
+import com.rafaelasoares.acesso.entity.UsuarioEntity;
 import com.rafaelasoares.acesso.repository.UsuarioRepository;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -42,7 +42,7 @@ public class UsuarioDetailsService implements UserDetailsService {
     @Override
     @Transactional(readOnly = true)
     public UserDetails loadUserByUsername(String email) {
-        Usuario usuario =
+        UsuarioEntity usuario =
                 usuarioRepository
                         .findByEmailIgnoreCase(email)
                         // Mensagem genérica de propósito: dizer "e-mail não

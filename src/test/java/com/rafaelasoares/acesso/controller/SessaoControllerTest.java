@@ -9,7 +9,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import com.rafaelasoares.TestcontainersConfiguration;
 import com.rafaelasoares.acesso.entity.PerfilAcesso;
-import com.rafaelasoares.acesso.entity.Usuario;
+import com.rafaelasoares.acesso.entity.UsuarioEntity;
 import com.rafaelasoares.acesso.repository.TokenAutenticacaoRepository;
 import com.rafaelasoares.acesso.repository.UsuarioRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -42,7 +42,7 @@ class SessaoControllerTest {
         tokenRepository.deleteAll();
         usuarioRepository.deleteAll();
         usuarioRepository.save(
-                Usuario.criar(
+                UsuarioEntity.criar(
                         "Rafaela Soares",
                         "rafaela@rafaelasoares.vet",
                         passwordEncoder.encode(SENHA),
@@ -157,11 +157,11 @@ class SessaoControllerTest {
     void inativarDerrubaSessao() throws Exception {
         String token = entrarEObterToken();
 
-        Usuario usuario =
+        UsuarioEntity usuario =
                 usuarioRepository.findByEmailIgnoreCase("rafaela@rafaelasoares.vet").orElseThrow();
         // Precisa haver outro administrador, senão a regra do último admin barra.
         usuarioRepository.save(
-                Usuario.criar(
+                UsuarioEntity.criar(
                         "Outro Admin",
                         "outro@rafaelasoares.vet",
                         passwordEncoder.encode(SENHA),
