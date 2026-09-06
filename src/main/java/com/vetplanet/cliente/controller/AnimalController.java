@@ -2,7 +2,7 @@ package com.vetplanet.cliente.controller;
 
 import com.vetplanet.cliente.dto.AnimalResponseDto;
 import com.vetplanet.cliente.dto.AtualizarAnimalRequestDto;
-import com.vetplanet.cliente.dto.ResumoAnimalDto;
+import com.vetplanet.cliente.dto.AnimalNaListaDto;
 import com.vetplanet.cliente.service.AtualizarAnimalService;
 import com.vetplanet.cliente.service.ListarAnimaisService;
 import com.vetplanet.cliente.service.BuscarAnimalService;
@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
@@ -71,14 +72,24 @@ public class AnimalController {
     }
 
     /**
-     * Animais em acompanhamento, com o nome do tutor — o seletor da Agenda.
+     * Busca de animais, com o nome do tutor junto.
      *
      * <p>Uma lista só, e não "escolha o tutor, depois o bicho": ela pensa "a
-     * Mel, da dona Ana".
+     * Mel, da dona Ana", e às vezes lembra do bicho sem lembrar de quem é.
+     *
+     * <p>Sem parâmetro nenhum devolve quem está em acompanhamento, que é
+     * exatamente o que o seletor da Agenda precisa — a mesma rota serve às
+     * duas telas.
+     *
+     * @param busca trecho do nome do animal; ausente lista todos
+     * @param incluirInativos por padrão a lista mostra só quem está em
+     *     acompanhamento, com tutor ativo
      */
     @GetMapping
-    public java.util.List<ResumoAnimalDto> listar() {
-        return listarAnimaisService.listarAnimaisAtivos();
+    public java.util.List<AnimalNaListaDto> listar(
+            @RequestParam(required = false) String busca,
+            @RequestParam(defaultValue = "false") boolean incluirInativos) {
+        return listarAnimaisService.listarAnimais(busca, incluirInativos);
     }
 
     @GetMapping("/{idAnimal}")
