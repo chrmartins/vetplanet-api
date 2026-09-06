@@ -21,13 +21,15 @@ atendem a domicílio (clínica geral, cães e gatos).
 ## Estado atual
 
 O domínio **`acesso` está pronto**: usuários do painel (CRUD com hash BCrypt),
-sessão por token opaco, autorização por perfil e troca de senha — com 18
-testes cobrindo entidade e controllers. As migrações `V001` e `V002` criam o
+sessão por token opaco, autorização por perfil e troca de senha — com 22
+testes cobrindo entidade, controllers e o bootstrap do administrador
+inicial. As migrações `V001` e `V002` criam o
 schema `acesso` com as tabelas `usuario` e `token_autenticacao`.
 
 Também já existem, transversais a todos os domínios: envelope único de erro
-por categoria, id de correlação por requisição, **CI no GitHub Actions** e
-**documentação OpenAPI** (dev).
+por categoria, id de correlação por requisição, **CI no GitHub Actions**,
+**documentação OpenAPI** (dev) e **`Dockerfile`** com o bootstrap do
+administrador inicial (ver "Deploy e o primeiro administrador").
 
 **Ainda não existe**: nenhum outro domínio. O próximo trabalho é `cadastro`
 (tutores e animais), que é o que destrava o agendamento.
