@@ -419,6 +419,50 @@ redefinição de senha pelo administrador.
 - Escopo do MVP: **só o clínico** (cadastro, agendamento, prontuário).
   Faturamento fica para depois.
 
+## Deploy e o primeiro administrador
+
+`Dockerfile` em dois estágios (JDK para build, JRE para runtime, usuário sem
+privilégio). Os testes ficam **fora** da imagem de propósito: usam
+Testcontainers, que precisa de um Docker acessível — quem roda a suíte é a CI,
+antes do deploy.
+
+Tudo que varia por ambiente é variável, com default só para o local:
+
+| Variável | Para quê |
+|---|---|
+| `BANCO_DADOS_URL` / `_USUARIO` / `_SENHA` | conexão com o Postgres |
+| `PORTA_HTTP` | porta (plataformas costumam injetar a delas) |
+| `ADMIN_INICIAL_EMAIL` / `ADMIN_INICIAL_SENHA` | ver abaixo |
+
+### O ovo e a galinha
+
+Todo endpoint exige autenticação, **inclusive o que cria usuário**, e não há
+cadastro público. Uma instância recém-subida tem a tabela `usuario` vazia:
+sem um mecanismo próprio, ninguém entra — nem o dono.
+
+`acesso/config/AdministradorInicialConfig` resolve isso fora do perfil `dev`.
+Ele é o irmão de produção do `DevSeedConfig`, e difere em três pontos
+deliberados:
+
+1. **Sem valor padrão.** Sem as duas variáveis, não cria nada e avisa no log.
+   Credencial padrão em ambiente real é como sistema é invadido no primeiro
+   dia.
+2. **Não registra a senha no log.** A do `DevSeedConfig` é conhecida e
+   descartável; esta é real.
+3. **Exige 12 caracteres** e falha o start se a senha for menor — subir de pé
+   com administrador fraco é pior do que não subir.
+
+É **idempotente**: se já existe qualquer usuário, não faz nada. Por isso as
+variáveis podem ficar configuradas sem risco em plataforma que reinicia
+contêiner sozinha.
+
+Depois do primeiro acesso: **trocar a senha pelo painel e remover as duas
+variáveis** — elas ficam visíveis no painel de qualquer plataforma de deploy,
+e o valor delas deixa de ser necessário assim que a conta existe.
+
+> Quando houver mais de um assinante, este mecanismo precisa virar parte do
+> provisionamento de cada inquilino — não uma variável global.
+
 ## Infraestrutura adiada
 
 Versões antigas da documentação tratavam estes itens como obrigatórios desde

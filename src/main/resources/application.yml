@@ -54,6 +54,21 @@ springdoc:
   swagger-ui:
     enabled: false
 
+# Administrador inicial, criado só quando a tabela `usuario` está vazia e
+# fora do perfil `dev` (ver acesso/config/AdministradorInicialConfig).
+#
+# Sem valor padrão de propósito: credencial padrão em ambiente real é como
+# sistema é invadido no primeiro dia. Sem as duas variáveis, nada é criado —
+# e a aplicação avisa no log que ninguém consegue entrar.
+#
+# Depois do primeiro acesso: trocar a senha pelo painel e REMOVER estas
+# variáveis do ambiente.
+app:
+  admin-inicial:
+    nome: ${ADMIN_INICIAL_NOME:Administrador}
+    email: ${ADMIN_INICIAL_EMAIL:}
+    senha: ${ADMIN_INICIAL_SENHA:}
+
 server:
   port: ${PORTA_HTTP:8080}
   error:
