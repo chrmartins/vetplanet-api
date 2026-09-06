@@ -402,6 +402,10 @@ redefinição de senha pelo administrador.
   em resposta de API — `UsuarioResponseDto` não expõe `senhaHash`.
 - **Nenhuma exclusão física** de usuário, consulta ou prontuário — sempre
   inativação por status (`ativo`, `status_consulta`).
+- **Duas exceções, com o mesmo critério: não há histórico a proteger.** Animal
+  sem consulta (o banco recusa o resto, por chave estrangeira) e bloqueio de
+  agenda, que é regra de disponibilidade e não fato ocorrido. Ver
+  `ExcluirAnimalService` e `ExcluirBloqueioService`, que documentam o porquê.
 - **Prontuário é imutável após confirmado** — correção gera registro de
   retificação, nunca sobrescreve o original.
 
@@ -410,7 +414,17 @@ redefinição de senha pelo administrador.
 - Atendimento é **sempre presencial e domiciliar**. Não há telemedicina — não
   implementar nem prever videochamada.
 - Consulta não é excluída: muda de status (`solicitada`, `confirmada`,
-  `cancelada`, `concluida`).
+  `cancelada`, `concluida`). **Sem máquina de estados** — a veterinária é a
+  única operadora e corrigir um clique errado precisa ser trivial.
+- **`agendamento.bloqueio` é o tempo indisponível**, em duas formas na mesma
+  tabela: semanal (`dia_da_semana`) ou período (`data_inicio`/`data_fim`), e o
+  banco recusa a linha que tentar ser as duas. **As horas são civis de
+  America/Sao_Paulo, não UTC** — desvio deliberado da regra de persistência,
+  explicado na migração `V005`: bloqueio semanal não é um instante, é uma hora
+  do relógio da parede, e em UTC ele mudaria de horário junto com o offset do
+  fuso.
+- **Não existe disponibilidade positiva** ("atendo das 9h às 18h"). O que há é
+  o negativo. Perguntar antes de implementar a outra.
 - Perfis de acesso são fixos, em enum: `ADMINISTRADOR`, `VETERINARIO`,
   `ATENDENTE`. Ficam como coluna de `acesso.usuario` com `check` constraint,
   não como tabela — as permissões são conferidas em código. Vira tabela no
