@@ -31,7 +31,7 @@ por categoria, id de correlação por requisição, **CI no GitHub Actions**,
 **documentação OpenAPI** (dev) e **`Dockerfile`** com o bootstrap do
 administrador inicial (ver "Deploy e o primeiro administrador").
 
-**Ainda não existe**: nenhum outro domínio. O próximo trabalho é `cadastro`
+**Ainda não existe**: nenhum outro domínio. O próximo trabalho é `cliente`
 (tutores e animais), que é o que destrava o agendamento.
 
 ## Stack
@@ -100,7 +100,7 @@ O **frontend não entra neste compose** — roda à parte com `npm run dev` no
 | Domínio | Pacote | Schema | Responsabilidade |
 |---|---|---|---|
 | Acesso | `com.vetplanet.acesso` | `acesso` | usuários do painel, autenticação |
-| Cadastro | `...cadastro` | `cadastro` | tutores, animais, endereços |
+| Cliente | `...cliente` | `cliente` | tutores, animais, endereços |
 | Agendamento | `...agendamento` | `agendamento` | consultas, disponibilidade |
 | Prontuário | `...prontuario` | `prontuario` | atendimento clínico, vacinas, peso |
 | Faturamento | `...faturamento` | `faturamento` | (fora do MVP) |
@@ -136,7 +136,7 @@ As duas últimas são **opcionais** — existem quando o domínio precisa delas,
 `acesso` é o único caso hoje. A regra para criar uma: o que está lá dentro só
 faz sentido para este domínio.
 
-Assim a fronteira que importa continua sendo `acesso.*` vs `cadastro.*` — um
+Assim a fronteira que importa continua sendo `acesso.*` vs `cliente.*` — um
 domínio novo não mexe em pasta de outro — e dentro de cada um fica óbvio onde
 cada coisa mora.
 
