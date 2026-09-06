@@ -4,16 +4,23 @@ import com.vetplanet.common.exception.BusinessRuleException;
 import com.vetplanet.common.exception.ConflictException;
 import com.vetplanet.common.exception.NotFoundException;
 import com.vetplanet.common.exception.UnauthorizedException;
+import static java.util.stream.Collectors.joining;
+
+import java.util.Arrays;
 import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+// Jackson 3 mudou de pacote: `com.fasterxml.jackson` virou `tools.jackson`.
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.exc.InvalidFormatException;
 
 /**
  * Traduz exceção de domínio em resposta HTTP.
@@ -21,7 +28,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
  * <p>O tratamento é por <b>categoria</b> ({@code UnauthorizedException},
  * {@code NotFoundException}, {@code ConflictException},
  * {@code BusinessRuleException}), não por classe concreta. Assim, quando
- * `cadastro` criar {@code AnimalNaoEncontradoException} ou `agendamento` criar
+ * `cliente` criar {@code AnimalNaoEncontradoException} ou `agendamento` criar
  * {@code HorarioIndisponivelException}, elas já são tratadas — basta estender
  * a categoria certa. Este arquivo não cresce junto com o sistema.
  *
@@ -110,6 +117,70 @@ public class ApiExceptionHandler {
                                 HttpStatus.BAD_REQUEST.value(),
                                 "Há campos inválidos na requisição.",
                                 campos));
+    }
+
+    /**
+     * Corpo que o Jackson não consegue ler → 400.
+     *
+     * <p>O caso comum é valor fora de um enum: mandar {@code "COELHO"} em
+     * {@code especie} não chega ao Bean Validation, porque a desserialização
+     * falha antes. Sem este handler isso caía na rede de segurança final e
+     * virava **500 com "informe o identificador ao suporte"** — culpando o
+     * servidor por um erro de quem chamou, e escondendo do cliente o que ele
+     * precisa corrigir. Vale para todos os enums da API
+     * ({@code PerfilAcesso}, {@code EspecieAnimal}, {@code SexoAnimal}...).
+     *
+     * <p>A mensagem devolvida é própria, e não a do Jackson: a original traz
+     * nome de classe e pacote, que é detalhe interno.
+     */
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ResponseEntity<ErrorResponse> tratarCorpoIlegivel(HttpMessageNotReadableException erro) {
+        log.debug("Corpo da requisição ilegível: {}", erro.getMessage());
+
+        if (erro.getCause() instanceof InvalidFormatException formato) {
+            String campo = caminhoDoCampo(formato);
+            String valoresAceitos = valoresAceitos(formato);
+            String mensagem =
+                    valoresAceitos == null
+                            ? "Valor inválido para este campo."
+                            : "Valor inválido. Use um destes: " + valoresAceitos + ".";
+
+            return ResponseEntity.badRequest()
+                    .body(
+                            ErrorResponse.deValidacao(
+                                    HttpStatus.BAD_REQUEST.value(),
+                                    "Há campos inválidos na requisição.",
+                                    List.of(new ErrorResponse.CampoInvalido(campo, mensagem))));
+        }
+
+        return resposta(HttpStatus.BAD_REQUEST, "Corpo da requisição inválido ou malformado.");
+    }
+
+    /**
+     * `animais[0].especie` — mesmo formato que o Bean Validation usa, para a
+     * tela tratar os dois tipos de erro de campo do mesmo jeito.
+     *
+     * <p>No Jackson 3 o acessor é {@code getPropertyName()}; era
+     * {@code getFieldName()} na série 2.
+     */
+    private static String caminhoDoCampo(InvalidFormatException erro) {
+        StringBuilder caminho = new StringBuilder();
+        for (JacksonException.Reference referencia : erro.getPath()) {
+            if (referencia.getPropertyName() != null) {
+                if (!caminho.isEmpty()) caminho.append('.');
+                caminho.append(referencia.getPropertyName());
+            } else {
+                caminho.append('[').append(referencia.getIndex()).append(']');
+            }
+        }
+        return caminho.isEmpty() ? "(corpo)" : caminho.toString();
+    }
+
+    /** Lista as constantes quando o alvo é enum; null para os demais tipos. */
+    private static String valoresAceitos(InvalidFormatException erro) {
+        Class<?> alvo = erro.getTargetType();
+        if (alvo == null || !alvo.isEnum()) return null;
+        return Arrays.stream(alvo.getEnumConstants()).map(Object::toString).collect(joining(", "));
     }
 
     /**
