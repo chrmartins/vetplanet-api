@@ -15,8 +15,8 @@ atendem a domicílio (clínica geral, cães e gatos).
 >
 > Este arquivo é **autocontido de propósito**: num clone limpo deste repo, o
 > `CLAUDE.md` da pasta-mãe e o `padrao-nomenclatura.md` — que fica no
-> repositório irmão `vetplanet-docs` — não existem. Tudo que é preciso para
-> trabalhar aqui está abaixo.
+> `vetplanet-docs`, pasta **local**, fora do GitHub por decisão — não existem.
+> Tudo que é preciso para trabalhar aqui está abaixo.
 
 ## Estado atual
 
