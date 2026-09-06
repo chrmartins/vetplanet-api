@@ -416,6 +416,15 @@ redefinição de senha pelo administrador.
 - Consulta não é excluída: muda de status (`solicitada`, `confirmada`,
   `cancelada`, `concluida`). **Sem máquina de estados** — a veterinária é a
   única operadora e corrigir um clique errado precisa ser trivial.
+- **`PUT /api/consultas/{id}` corrige e remarca, e não aceita `idAnimal` nem
+  `status`.** Remarcar precisa existir porque cancelar e recriar escreveria um
+  fato falso — `CANCELADA` quer dizer que não aconteceu. Trocar o animal não
+  entra porque a consulta é a âncora do histórico clínico dele; o caso do bicho
+  errado se resolve cancelando, e ali o cancelamento é honesto. Status tem
+  endpoint próprio: é fato que ocorre, não campo de formulário.
+- **A edição não trava por status.** A trava, quando existir, vem do prontuário
+  preso à consulta — não do relógio. É a mesma lógica do `ExcluirAnimalService`:
+  quem recusa é a chave estrangeira, não uma checagem de estado.
 - **`agendamento.bloqueio` é o tempo indisponível**, em duas formas na mesma
   tabela: semanal (`dia_da_semana`) ou período (`data_inicio`/`data_fim`), e o
   banco recusa a linha que tentar ser as duas. **As horas são civis de

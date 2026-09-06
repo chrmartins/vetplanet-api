@@ -1,9 +1,12 @@
 package com.vetplanet.agendamento.controller;
 
 import com.vetplanet.agendamento.dto.AlterarStatusRequestDto;
+import com.vetplanet.agendamento.dto.AtualizarConsultaRequestDto;
 import com.vetplanet.agendamento.dto.ConsultaResponseDto;
 import com.vetplanet.agendamento.dto.CriarConsultaRequestDto;
 import com.vetplanet.agendamento.service.AlterarStatusConsultaService;
+import com.vetplanet.agendamento.service.AtualizarConsultaService;
+import com.vetplanet.agendamento.service.BuscarConsultaService;
 import com.vetplanet.agendamento.service.CriarConsultaService;
 import com.vetplanet.agendamento.service.ListarConsultasService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -19,6 +22,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -38,14 +42,20 @@ public class ConsultaController {
 
     private final CriarConsultaService criarConsultaService;
     private final ListarConsultasService listarConsultasService;
+    private final BuscarConsultaService buscarConsultaService;
+    private final AtualizarConsultaService atualizarConsultaService;
     private final AlterarStatusConsultaService alterarStatusConsultaService;
 
     public ConsultaController(
             CriarConsultaService criarConsultaService,
             ListarConsultasService listarConsultasService,
+            BuscarConsultaService buscarConsultaService,
+            AtualizarConsultaService atualizarConsultaService,
             AlterarStatusConsultaService alterarStatusConsultaService) {
         this.criarConsultaService = criarConsultaService;
         this.listarConsultasService = listarConsultasService;
+        this.buscarConsultaService = buscarConsultaService;
+        this.atualizarConsultaService = atualizarConsultaService;
         this.alterarStatusConsultaService = alterarStatusConsultaService;
     }
 
@@ -76,10 +86,33 @@ public class ConsultaController {
         return listarConsultasService.listarConsultas(de, ate);
     }
 
+    @GetMapping("/{idConsulta}")
+    @Operation(summary = "Uma consulta pelo id — o que a tela de edição carrega")
+    public ConsultaResponseDto buscar(@PathVariable UUID idConsulta) {
+        return buscarConsultaService.buscarConsulta(idConsulta);
+    }
+
     @GetMapping("/animal/{idAnimal}")
     @Operation(summary = "Histórico de um animal, do mais recente para o mais antigo")
     public List<ConsultaResponseDto> listarDoAnimal(@PathVariable UUID idAnimal) {
         return listarConsultasService.listarConsultasDoAnimal(idAnimal);
+    }
+
+    @PutMapping("/{idConsulta}")
+    @Operation(
+            summary = "Corrige ou remarca uma consulta",
+            description =
+                    "Existe para remarcar não ser cancelar e criar de novo — CANCELADA quer dizer "
+                            + "que o atendimento não aconteceu, e um remarcado aconteceu, só que "
+                            + "mais tarde. NÃO aceita idAnimal: a consulta é a âncora do histórico "
+                            + "do animal, e trocá-lo reescreveria dois históricos de uma vez; "
+                            + "marcar no bicho errado se resolve cancelando e marcando de novo, e "
+                            + "ali o cancelamento é honesto. Status também não entra: tem "
+                            + "endpoint próprio.")
+    public ConsultaResponseDto atualizar(
+            @PathVariable UUID idConsulta,
+            @Valid @RequestBody AtualizarConsultaRequestDto request) {
+        return atualizarConsultaService.atualizarConsulta(idConsulta, request);
     }
 
     @PatchMapping("/{idConsulta}/status")
