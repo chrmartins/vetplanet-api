@@ -15,9 +15,9 @@ spring:
   datasource:
     # Em produção tudo vem de variável de ambiente (ver CLAUDE.md seção 9).
     # Os defaults abaixo servem só para o Postgres do docker-compose local.
-    url: ${BANCO_DADOS_URL:jdbc:postgresql://localhost:5433/rafaela_vet}
-    username: ${BANCO_DADOS_USUARIO:rafaela}
-    password: ${BANCO_DADOS_SENHA:rafaela_local}
+    url: ${BANCO_DADOS_URL:jdbc:postgresql://localhost:5433/vetplanet}
+    username: ${BANCO_DADOS_USUARIO:vetplanet}
+    password: ${BANCO_DADOS_SENHA:vetplanet_local}
 
   jpa:
     hibernate:

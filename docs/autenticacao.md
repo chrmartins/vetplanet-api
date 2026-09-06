@@ -79,7 +79,7 @@ sequenceDiagram
     A->>D: grava SHA-256(token)<br/>em token_autenticacao
     A-->>N: 200 { token, expiraEm, usuario }
 
-    Note over N: Set-Cookie rafaela_sessao=token<br/>httpOnly · Secure · SameSite=Lax<br/>expires = expiraEm
+    Note over N: Set-Cookie vetplanet_sessao=token<br/>httpOnly · Secure · SameSite=Lax<br/>expires = expiraEm
 
     N-->>U: 200 { usuario }
     Note over U: O corpo NÃO traz o token.<br/>document.cookie fica vazio.
