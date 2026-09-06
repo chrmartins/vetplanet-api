@@ -1,7 +1,7 @@
 # Autenticação e sessão — como front e back conversam
 
-Documento de referência do fluxo completo entre **`rafaela-vet-front`**
-(Next.js) e **`rafaela-vet-api`** (Spring Boot): como alguém entra, como cada
+Documento de referência do fluxo completo entre **`vetplanet-app`**
+(Next.js) e **`vetplanet-api`** (Spring Boot): como alguém entra, como cada
 requisição é autenticada, como a sessão morre e o que garante cada parte.
 
 > Este é o documento canônico do assunto. O `CLAUDE.md` de cada repositório
@@ -36,7 +36,7 @@ XSS. Aqui não há o que roubar.
 flowchart LR
     U["Navegador<br/>(Dra. Rafaela)"]
     N["Servidor Next<br/>(BFF)"]
-    A["API Spring<br/>rafaela-vet-api"]
+    A["API Spring<br/>vetplanet-api"]
     D[("Postgres<br/>schema acesso")]
 
     U <-->|"cookie httpOnly<br/>(o JS não lê)"| N
@@ -228,7 +228,7 @@ protegido, em vez de depender de alguém lembrar de anotá-lo.
 
 ## Onde cada peça mora
 
-### Frontend (`rafaela-vet-front`)
+### Frontend (`vetplanet-app`)
 
 | Arquivo | Papel |
 |---|---|
@@ -240,7 +240,7 @@ protegido, em vez de depender de alguém lembrar de anotá-lo.
 | `app/painel/entrar/login-form.tsx` | formulário |
 | `app/painel/(protegido)/layout.tsx` | valida a sessão de verdade |
 
-### Backend (`rafaela-vet-api`)
+### Backend (`vetplanet-api`)
 
 | Arquivo | Papel |
 |---|---|

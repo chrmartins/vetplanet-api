@@ -1,15 +1,21 @@
-# CLAUDE.md — rafaela-vet-api
+# CLAUDE.md — vetplanet-api
 
-API do sistema **Dra. Rafaela Soares** — atendimento veterinário domiciliar
-(clínica geral, cães e gatos) no Rio de Janeiro.
+API do **VetPlanet** — produto de gestão para veterinários autônomos que
+atendem a domicílio (clínica geral, cães e gatos).
 
-> Repositório irmão: **`rafaela-vet-front`** (Next.js — site público em
-> `rafaelasoares.vet` + painel administrativo em `/painel`). É o único
-> consumidor desta API hoje.
+> Repositório irmão: **`vetplanet-app`** (Next.js), o painel do produto e o
+> único consumidor desta API. O site institucional da Dra. Rafaela é outro
+> projeto (`rafaelasoares-site`), não fala com esta API e não deve passar a
+> falar.
+>
+> A Dra. Rafaela é a **usuária-zero**: o produto é construído contra as
+> necessidades reais dela. Ver a direção declarada no `CLAUDE.md` da
+> pasta-mãe — o sistema é **em primeira pessoa** (uma agenda por assinante,
+> nunca coluna por profissional), e isso continua valendo no cenário SaaS.
 >
 > Este arquivo é **autocontido de propósito**: num clone limpo deste repo, o
 > `CLAUDE.md` da pasta-mãe e o `padrao-nomenclatura.md` — que fica no
-> repositório irmão `rafaela-vet-docs` — não existem. Tudo que é preciso para
+> repositório irmão `vetplanet-docs` — não existem. Tudo que é preciso para
 > trabalhar aqui está abaixo.
 
 ## Estado atual
@@ -82,7 +88,7 @@ ocupada por outro projeto na máquina do dev. Dentro do contêiner continua
 em `application.yml` valem para produção, onde não há compose.
 
 O **frontend não entra neste compose** — roda à parte com `npm run dev` no
-`rafaela-vet-front`. Cada repositório sobe o que é seu.
+`vetplanet-app`. Cada repositório sobe o que é seu.
 
 ## Arquitetura
 
@@ -91,7 +97,7 @@ O **frontend não entra neste compose** — roda à parte com `npm run dev` no
 
 | Domínio | Pacote | Schema | Responsabilidade |
 |---|---|---|---|
-| Acesso | `com.rafaelasoares.acesso` | `acesso` | usuários do painel, autenticação |
+| Acesso | `com.vetplanet.acesso` | `acesso` | usuários do painel, autenticação |
 | Cadastro | `...cadastro` | `cadastro` | tutores, animais, endereços |
 | Agendamento | `...agendamento` | `agendamento` | consultas, disponibilidade |
 | Prontuário | `...prontuario` | `prontuario` | atendimento clínico, vacinas, peso |
@@ -152,7 +158,7 @@ qualquer um deles de virar gaveta de bagunça:
 
 O critério para `common/` e `web/`: se a classe cita `Usuario`, `Consulta` ou
 qualquer conceito da clínica, ela **não** é genérica — é de um domínio, e o
-lugar dela é lá dentro. Um `import com.rafaelasoares.<dominio>` aparecendo em
+lugar dela é lá dentro. Um `import com.vetplanet.<dominio>` aparecendo em
 `common/` ou `web/` é o sinal de que a abstração está furada.
 
 O caso concreto que já aconteceu: o `ApiExceptionHandler` tinha um

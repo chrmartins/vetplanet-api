@@ -11,7 +11,7 @@
 services:
   postgres:
     image: postgres:17-alpine
-    container_name: rafaela-vet-postgres
+    container_name: vetplanet-postgres
     environment:
       POSTGRES_DB: rafaela_vet
       POSTGRES_USER: rafaela
@@ -24,7 +24,7 @@ services:
       # nesta máquina. Dentro do container continua sendo 5432.
       - "5433:5432"
     volumes:
-      - rafaela-vet-postgres:/var/lib/postgresql/data
+      - vetplanet-postgres:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U rafaela -d rafaela_vet"]
       interval: 5s
@@ -32,4 +32,4 @@ services:
       retries: 10
 
 volumes:
-  rafaela-vet-postgres:
+  vetplanet-postgres:

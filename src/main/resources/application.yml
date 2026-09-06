@@ -1,6 +1,6 @@
 spring:
   application:
-    name: rafaela-vet-api
+    name: vetplanet-api
 
   docker:
     compose:
@@ -71,7 +71,7 @@ management:
 
 logging:
   level:
-    com.rafaelasoares: INFO
+    com.vetplanet: INFO
   pattern:
     # Imprime o id da requisição (posto no MDC pelo RequestIdFilter) em toda
     # linha. É o que liga o erro visto na tela ao rastro no log: o mesmo id
