@@ -2,7 +2,9 @@ package com.vetplanet.cliente.controller;
 
 import com.vetplanet.cliente.dto.AnimalResponseDto;
 import com.vetplanet.cliente.dto.AtualizarAnimalRequestDto;
+import com.vetplanet.cliente.dto.ResumoAnimalDto;
 import com.vetplanet.cliente.service.AtualizarAnimalService;
+import com.vetplanet.cliente.service.ListarAnimaisService;
 import com.vetplanet.cliente.service.BuscarAnimalService;
 import com.vetplanet.cliente.service.InativarAnimalService;
 import com.vetplanet.cliente.service.ReativarAnimalService;
@@ -43,6 +45,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/animais")
 public class AnimalController {
 
+    private final ListarAnimaisService listarAnimaisService;
     private final BuscarAnimalService buscarAnimalService;
     private final AtualizarAnimalService atualizarAnimalService;
     private final RegistrarObitoService registrarObitoService;
@@ -51,18 +54,31 @@ public class AnimalController {
     private final ExcluirAnimalService excluirAnimalService;
 
     public AnimalController(
+            ListarAnimaisService listarAnimaisService,
             BuscarAnimalService buscarAnimalService,
             AtualizarAnimalService atualizarAnimalService,
             RegistrarObitoService registrarObitoService,
             InativarAnimalService inativarAnimalService,
             ReativarAnimalService reativarAnimalService,
             ExcluirAnimalService excluirAnimalService) {
+        this.listarAnimaisService = listarAnimaisService;
         this.buscarAnimalService = buscarAnimalService;
         this.atualizarAnimalService = atualizarAnimalService;
         this.registrarObitoService = registrarObitoService;
         this.inativarAnimalService = inativarAnimalService;
         this.reativarAnimalService = reativarAnimalService;
         this.excluirAnimalService = excluirAnimalService;
+    }
+
+    /**
+     * Animais em acompanhamento, com o nome do tutor — o seletor da Agenda.
+     *
+     * <p>Uma lista só, e não "escolha o tutor, depois o bicho": ela pensa "a
+     * Mel, da dona Ana".
+     */
+    @GetMapping
+    public java.util.List<ResumoAnimalDto> listar() {
+        return listarAnimaisService.listarAnimaisAtivos();
     }
 
     @GetMapping("/{idAnimal}")
