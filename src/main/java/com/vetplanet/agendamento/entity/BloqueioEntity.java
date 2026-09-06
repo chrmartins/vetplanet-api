@@ -10,14 +10,21 @@ import java.time.LocalTime;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.UUID;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 /**
  * Tempo que não é para atender: almoço, congresso, feriado, médico.
  *
- * <p><b>Duas formas na mesma tabela.</b> Semanal ({@code diaDaSemana}
+ * <p><b>Duas formas na mesma tabela.</b> Semanal ({@code diasDaSemana}
  * preenchido) é o que repete — o almoço. Período ({@code dataInicio} e
  * {@code dataFim}) é o trecho de calendário — o congresso. O banco recusa a
- * linha que tentar ser as duas; ver {@code V005}.
+ * linha que tentar ser as duas; ver {@code V005} e {@code V006}.
+ *
+ * <p><b>Um bloqueio semanal vale para vários dias</b>, num array, e não uma
+ * linha por dia. "Almoço de segunda a sexta" é uma coisa só na cabeça de quem
+ * cadastrou: cinco linhas obrigariam a apagar cinco para desfazer e a editar
+ * cinco para mudar o horário.
  *
  * <p><b>Horário em tempo civil, não em UTC.</b> É desvio consciente da regra
  * do projeto, e a razão está na migração: "almoço ao meio-dia" não é um
@@ -44,9 +51,16 @@ public class BloqueioEntity {
     @Column(name = "motivo", nullable = false)
     private String motivo;
 
-    /** 0 = domingo … 6 = sábado. Nulo quando o bloqueio é um período. */
-    @Column(name = "dia_da_semana")
-    private Short diaDaSemana;
+    /**
+     * 0 = domingo … 6 = sábado. Nulo quando o bloqueio é um período.
+     *
+     * <p>Array do Postgres, não tabela de junção: são no máximo sete valores
+     * pequenos que só fazem sentido junto com a linha, e ninguém consulta
+     * "todos os bloqueios da terça" no banco — quem cruza com o dia é a tela.
+     */
+    @JdbcTypeCode(SqlTypes.ARRAY)
+    @Column(name = "dias_da_semana")
+    private Short[] diasDaSemana;
 
     @Column(name = "data_inicio")
     private LocalDate dataInicio;
@@ -73,25 +87,55 @@ public class BloqueioEntity {
 
     private BloqueioEntity(
             String motivo,
-            Short diaDaSemana,
+            Short[] diasDaSemana,
+            LocalDate dataInicio,
+            LocalDate dataFim,
+            LocalTime horaInicio,
+            LocalTime horaFim) {
+        aplicar(motivo, diasDaSemana, dataInicio, dataFim, horaInicio, horaFim);
+        this.criadoEm = OffsetDateTime.now(ZoneOffset.UTC);
+        this.atualizadoEm = this.criadoEm;
+    }
+
+    private void aplicar(
+            String motivo,
+            Short[] diasDaSemana,
             LocalDate dataInicio,
             LocalDate dataFim,
             LocalTime horaInicio,
             LocalTime horaFim) {
         this.motivo = motivo.trim();
-        this.diaDaSemana = diaDaSemana;
+        this.diasDaSemana = diasDaSemana;
         this.dataInicio = dataInicio;
         this.dataFim = dataFim;
         this.horaInicio = horaInicio;
         this.horaFim = horaFim;
-        this.criadoEm = OffsetDateTime.now(ZoneOffset.UTC);
-        this.atualizadoEm = this.criadoEm;
+    }
+
+    /**
+     * Substitui o conteúdo do bloqueio, <b>inclusive a forma</b>.
+     *
+     * <p>Um bloqueio semanal pode virar período e vice-versa: o que ela quis
+     * dizer com "congresso" pode mudar de "dia 20 a 22" para "toda quinta", e
+     * obrigá-la a apagar e recriar só para trocar isso seria capricho nosso.
+     * Por isso os campos da forma que sai vão a nulo, e não ficam para trás —
+     * o check do banco recusaria a linha híbrida.
+     */
+    public void atualizar(
+            String motivo,
+            Short[] diasDaSemana,
+            LocalDate dataInicio,
+            LocalDate dataFim,
+            LocalTime horaInicio,
+            LocalTime horaFim) {
+        aplicar(motivo, diasDaSemana, dataInicio, dataFim, horaInicio, horaFim);
+        this.atualizadoEm = OffsetDateTime.now(ZoneOffset.UTC);
     }
 
     /** Bloqueio que repete toda semana — o almoço, o dia que ela não atende. */
     public static BloqueioEntity semanal(
-            String motivo, short diaDaSemana, LocalTime horaInicio, LocalTime horaFim) {
-        return new BloqueioEntity(motivo, diaDaSemana, null, null, horaInicio, horaFim);
+            String motivo, Short[] diasDaSemana, LocalTime horaInicio, LocalTime horaFim) {
+        return new BloqueioEntity(motivo, diasDaSemana, null, null, horaInicio, horaFim);
     }
 
     /**
@@ -118,8 +162,8 @@ public class BloqueioEntity {
         return motivo;
     }
 
-    public Short getDiaDaSemana() {
-        return diaDaSemana;
+    public Short[] getDiasDaSemana() {
+        return diasDaSemana;
     }
 
     public LocalDate getDataInicio() {

@@ -2,6 +2,7 @@ package com.vetplanet.agendamento.controller;
 
 import com.vetplanet.agendamento.dto.BloqueioResponseDto;
 import com.vetplanet.agendamento.dto.CriarBloqueioRequestDto;
+import com.vetplanet.agendamento.service.AtualizarBloqueioService;
 import com.vetplanet.agendamento.service.CriarBloqueioService;
 import com.vetplanet.agendamento.service.ExcluirBloqueioService;
 import com.vetplanet.agendamento.service.ListarBloqueiosService;
@@ -16,6 +17,7 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -39,14 +41,17 @@ public class BloqueioController {
 
     private final CriarBloqueioService criarBloqueioService;
     private final ListarBloqueiosService listarBloqueiosService;
+    private final AtualizarBloqueioService atualizarBloqueioService;
     private final ExcluirBloqueioService excluirBloqueioService;
 
     public BloqueioController(
             CriarBloqueioService criarBloqueioService,
             ListarBloqueiosService listarBloqueiosService,
+            AtualizarBloqueioService atualizarBloqueioService,
             ExcluirBloqueioService excluirBloqueioService) {
         this.criarBloqueioService = criarBloqueioService;
         this.listarBloqueiosService = listarBloqueiosService;
+        this.atualizarBloqueioService = atualizarBloqueioService;
         this.excluirBloqueioService = excluirBloqueioService;
     }
 
@@ -54,10 +59,11 @@ public class BloqueioController {
     @Operation(
             summary = "Bloqueia um tempo na agenda",
             description =
-                    "Duas formas: semanal (informe diaDaSemana, 0=domingo..6=sábado) ou período "
-                            + "(dataInicio e dataFim). Nunca as duas. Sem horaInicio/horaFim, "
-                            + "bloqueia o dia inteiro. As horas são civis do fuso da clínica, "
-                            + "não instantes UTC — bloqueio semanal não é um ponto no tempo.")
+                    "Duas formas: semanal (diasDaSemana, 0=domingo..6=sábado, vários por "
+                            + "bloqueio) ou período (dataInicio e dataFim). Nunca as duas. Sem "
+                            + "horaInicio/horaFim, bloqueia o dia inteiro. As horas são civis do "
+                            + "fuso da clínica, não instantes UTC — bloqueio semanal não é um "
+                            + "ponto no tempo.")
     public ResponseEntity<BloqueioResponseDto> criar(
             @Valid @RequestBody CriarBloqueioRequestDto request) {
         BloqueioResponseDto bloqueio = criarBloqueioService.criarBloqueio(request);
@@ -73,6 +79,20 @@ public class BloqueioController {
                             + "trinta. Quem desenha o dia é que cruza com o dia da semana.")
     public List<BloqueioResponseDto> listar() {
         return listarBloqueiosService.listarBloqueios();
+    }
+
+    @PutMapping("/{idBloqueio}")
+    @Operation(
+            summary = "Substitui um bloqueio",
+            description =
+                    "PUT e não PATCH: substitui o conteúdo inteiro, inclusive a forma — um "
+                            + "bloqueio semanal pode virar período. Campos soltos deixariam "
+                            + "conviver dia da semana e datas, que é a linha que o banco recusa. "
+                            + "Existe para mudar o almoço das 12h para as 13h sem apagar e "
+                            + "recriar; bloqueio não tem histórico preso, então a edição é direta.")
+    public BloqueioResponseDto atualizar(
+            @PathVariable UUID idBloqueio, @Valid @RequestBody CriarBloqueioRequestDto request) {
+        return atualizarBloqueioService.atualizarBloqueio(idBloqueio, request);
     }
 
     @DeleteMapping("/{idBloqueio}")

@@ -16,9 +16,13 @@ public interface BloqueioRepository extends JpaRepository<BloqueioEntity, UUID> 
      * almoço, um congresso, um feriado — e o semanal não tem data para
      * filtrar. Buscar tudo é uma consulta só, e a tela cruza com o dia que
      * está desenhando. Se um dia virarem centenas, o filtro entra aqui.
+     *
+     * <p>Semanais primeiro (sem data), depois os períodos em ordem de início.
+     * <b>Não ordena por dia da semana</b>: virou array, e ordenar por array no
+     * banco não diria nada — a tela separa as duas listas de qualquer forma.
      */
     @Query(
             "select b from BloqueioEntity b "
-                    + "order by b.diaDaSemana asc nulls last, b.dataInicio asc, b.horaInicio asc nulls first")
+                    + "order by b.dataInicio asc nulls first, b.horaInicio asc nulls first")
     List<BloqueioEntity> listarOrdenados();
 }

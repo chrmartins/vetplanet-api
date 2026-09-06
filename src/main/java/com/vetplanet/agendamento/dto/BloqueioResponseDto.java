@@ -4,6 +4,8 @@ import com.vetplanet.agendamento.entity.BloqueioEntity;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.OffsetDateTime;
+import java.util.Arrays;
+import java.util.List;
 import java.util.UUID;
 
 /**
@@ -17,7 +19,7 @@ import java.util.UUID;
 public record BloqueioResponseDto(
         UUID idBloqueio,
         String motivo,
-        Short diaDaSemana,
+        List<Short> diasDaSemana,
         LocalDate dataInicio,
         LocalDate dataFim,
         LocalTime horaInicio,
@@ -29,7 +31,9 @@ public record BloqueioResponseDto(
         return new BloqueioResponseDto(
                 bloqueio.getId(),
                 bloqueio.getMotivo(),
-                bloqueio.getDiaDaSemana(),
+                bloqueio.getDiasDaSemana() == null
+                        ? null
+                        : Arrays.asList(bloqueio.getDiasDaSemana()),
                 bloqueio.getDataInicio(),
                 bloqueio.getDataFim(),
                 bloqueio.getHoraInicio(),
