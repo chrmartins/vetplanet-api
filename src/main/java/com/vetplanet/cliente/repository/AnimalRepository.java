@@ -25,6 +25,15 @@ public interface AnimalRepository extends JpaRepository<AnimalEntity, UUID> {
     @Query("select a from AnimalEntity a join fetch a.tutor where a.id = :idAnimal")
     Optional<AnimalEntity> buscarComTutor(UUID idAnimal);
 
+    /**
+     * Vários animais com o tutor junto, numa consulta só.
+     *
+     * <p>Usado por {@code ResumirAnimaisService} para a Agenda montar
+     * "Thor · J. Lima" sem disparar uma consulta por linha.
+     */
+    @Query("select a from AnimalEntity a join fetch a.tutor where a.id in :ids")
+    List<AnimalEntity> buscarComTutorPorIds(java.util.Collection<UUID> ids);
+
     /** Busca por parte do nome do animal — "a gata Mel", sem saber o tutor. */
     @Query(
             "select a from AnimalEntity a join fetch a.tutor "

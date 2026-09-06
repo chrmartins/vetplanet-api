@@ -1,6 +1,5 @@
 package com.vetplanet.cliente.dto;
 
-import com.vetplanet.cliente.entity.AnimalEntity;
 import com.vetplanet.cliente.entity.TutorEntity;
 import java.time.OffsetDateTime;
 import java.util.List;
@@ -32,9 +31,16 @@ public record TutorResponseDto(
         return montar(tutor, quantidadeDeAnimais, null);
     }
 
-    /** Para a ficha: com os animais. */
-    public static TutorResponseDto completo(TutorEntity tutor, List<AnimalEntity> animais) {
-        return montar(tutor, animais.size(), animais.stream().map(AnimalResponseDto::de).toList());
+    /**
+     * Para a ficha: com os animais já montados.
+     *
+     * <p>Recebe os DTOs prontos, e não as entidades, porque cada animal
+     * carrega {@code podeExcluir} — que depende de perguntar a outro domínio
+     * se há histórico. Um record estático não tem como fazer essa pergunta;
+     * quem tem é o service.
+     */
+    public static TutorResponseDto completo(TutorEntity tutor, List<AnimalResponseDto> animais) {
+        return montar(tutor, animais.size(), animais);
     }
 
     private static TutorResponseDto montar(

@@ -3,6 +3,7 @@ package com.vetplanet.cliente.service;
 import com.vetplanet.cliente.dto.TutorResponseDto;
 import com.vetplanet.cliente.entity.TutorEntity;
 import com.vetplanet.cliente.exception.TutorNaoEncontradoException;
+import com.vetplanet.cliente.dto.AnimalResponseDto;
 import com.vetplanet.cliente.repository.AnimalRepository;
 import com.vetplanet.cliente.repository.TutorRepository;
 import java.util.UUID;
@@ -28,11 +29,13 @@ public class InativarTutorService {
 
     private final TutorRepository tutorRepository;
     private final AnimalRepository animalRepository;
+    private final HistoricoDoAnimal historicoDoAnimal;
 
     public InativarTutorService(
-            TutorRepository tutorRepository, AnimalRepository animalRepository) {
+            TutorRepository tutorRepository, AnimalRepository animalRepository, HistoricoDoAnimal historicoDoAnimal) {
         this.tutorRepository = tutorRepository;
         this.animalRepository = animalRepository;
+        this.historicoDoAnimal = historicoDoAnimal;
     }
 
     @Transactional
@@ -45,6 +48,13 @@ public class InativarTutorService {
         tutor.inativar();
         log.info("Tutor {} inativado", idTutor);
 
-        return TutorResponseDto.completo(tutor, animalRepository.findByTutorIdOrderByNomeAsc(idTutor));
+        return TutorResponseDto.completo(tutor, montarAnimais(idTutor));
+    }
+
+    /** Cada animal precisa saber se ainda pode ser excluído. */
+    private java.util.List<AnimalResponseDto> montarAnimais(java.util.UUID idTutor) {
+        return animalRepository.findByTutorIdOrderByNomeAsc(idTutor).stream()
+                .map(animal -> AnimalResponseDto.de(animal, !historicoDoAnimal.temHistorico(animal.getId())))
+                .toList();
     }
 }

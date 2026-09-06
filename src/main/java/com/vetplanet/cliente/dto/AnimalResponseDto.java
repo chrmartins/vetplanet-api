@@ -27,11 +27,9 @@ public record AnimalResponseDto(
          * fosse falhar. Quem de fato impede é a chave estrangeira no banco
          * (ver {@code ExcluirAnimalService}); isto aqui é só a aparência.
          *
-         * <p>TODO(historico): hoje é sempre {@code true} porque não existe
-         * nada que referencie animal — {@code agendamento} e {@code prontuario}
-         * não foram criados. Quando existirem, perguntar a eles. Esquecer não
-         * quebra nada: a lixeira aparece, o banco recusa e a resposta é 409
-         * explicando o caminho do óbito.
+         * <p>Quem monta o DTO precisa informar — não há valor padrão, de
+         * propósito: um default silencioso voltaria a mentir quando
+         * `prontuario` existir e ninguém lembrar de perguntar a ele.
          */
         boolean podeExcluir,
         OffsetDateTime criadoEm,
@@ -41,7 +39,7 @@ public record AnimalResponseDto(
      * Só use com o tutor carregado (ver {@code AnimalRepository#buscarComTutor})
      * ou dentro da transação — {@code getTutor().getId()} toca a relação LAZY.
      */
-    public static AnimalResponseDto de(AnimalEntity animal) {
+    public static AnimalResponseDto de(AnimalEntity animal, boolean podeExcluir) {
         return new AnimalResponseDto(
                 animal.getId(),
                 animal.getTutor().getId(),
@@ -53,7 +51,7 @@ public record AnimalResponseDto(
                 animal.getCastrado(),
                 animal.getObservacoes(),
                 animal.getSituacao(),
-                true,
+                podeExcluir,
                 animal.getCriadoEm(),
                 animal.getAtualizadoEm());
     }

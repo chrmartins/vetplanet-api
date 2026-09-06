@@ -4,6 +4,7 @@ import com.vetplanet.cliente.dto.AnimalResponseDto;
 import com.vetplanet.cliente.entity.AnimalEntity;
 import com.vetplanet.cliente.exception.AnimalNaoEncontradoException;
 import com.vetplanet.cliente.repository.AnimalRepository;
+import com.vetplanet.cliente.service.HistoricoDoAnimal;
 import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -28,9 +29,11 @@ public class RegistrarObitoService {
     private static final Logger log = LoggerFactory.getLogger(RegistrarObitoService.class);
 
     private final AnimalRepository animalRepository;
+    private final HistoricoDoAnimal historicoDoAnimal;
 
-    public RegistrarObitoService(AnimalRepository animalRepository) {
+    public RegistrarObitoService(AnimalRepository animalRepository, HistoricoDoAnimal historicoDoAnimal) {
         this.animalRepository = animalRepository;
+        this.historicoDoAnimal = historicoDoAnimal;
     }
 
     @Transactional
@@ -42,6 +45,6 @@ public class RegistrarObitoService {
 
         animal.registrarObito();
         log.info("Óbito registrado para o animal {}", idAnimal);
-        return AnimalResponseDto.de(animal);
+        return AnimalResponseDto.de(animal, !historicoDoAnimal.temHistorico(animal.getId()));
     }
 }
