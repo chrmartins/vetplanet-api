@@ -4,6 +4,8 @@ import com.vetplanet.agendamento.dto.AlterarStatusRequestDto;
 import com.vetplanet.agendamento.dto.AtualizarConsultaRequestDto;
 import com.vetplanet.agendamento.dto.ConsultaResponseDto;
 import com.vetplanet.agendamento.dto.CriarConsultaRequestDto;
+import com.vetplanet.agendamento.entity.StatusConsulta;
+import com.vetplanet.agendamento.exception.StatusConcluidaReservadoException;
 import com.vetplanet.agendamento.service.AlterarStatusConsultaService;
 import com.vetplanet.agendamento.service.AtualizarConsultaService;
 import com.vetplanet.agendamento.service.BuscarConsultaService;
@@ -121,9 +123,18 @@ public class ConsultaController {
             description =
                     "Cancelar é status, não exclusão: a consulta continua no histórico. Um "
                             + "endpoint com o status no corpo, e não quatro rotas com verbo, "
-                            + "porque os quatro estados são o mesmo eixo.")
+                            + "porque os quatro estados são o mesmo eixo. NÃO aceita CONCLUIDA: "
+                            + "uma consulta é concluída ao concluir o atendimento dela, e uma "
+                            + "porta lateral aqui permitiria marcá-la como realizada sem o "
+                            + "prontuário que a lei exige.")
     public ConsultaResponseDto alterarStatus(
             @PathVariable UUID idConsulta, @Valid @RequestBody AlterarStatusRequestDto request) {
+        // A trava vive no controller, e não no service: quem conclui de
+        // verdade é `ConcluirAtendimentoService`, que chama o mesmo service
+        // internamente. O que não pode existir é a porta HTTP.
+        if (request.status() == StatusConsulta.CONCLUIDA) {
+            throw new StatusConcluidaReservadoException();
+        }
         return alterarStatusConsultaService.alterarStatus(idConsulta, request.status());
     }
 }

@@ -3,6 +3,7 @@ package com.vetplanet.agendamento.service;
 import com.vetplanet.agendamento.dto.AtualizarConsultaRequestDto;
 import com.vetplanet.agendamento.dto.ConsultaResponseDto;
 import com.vetplanet.agendamento.entity.ConsultaEntity;
+import com.vetplanet.agendamento.exception.ConsultaComRegistroClinicoException;
 import com.vetplanet.agendamento.exception.ConsultaNaoEncontradaException;
 import com.vetplanet.agendamento.repository.ConsultaRepository;
 import com.vetplanet.cliente.service.ResumirAnimaisService;
@@ -19,12 +20,14 @@ import org.springframework.transaction.annotation.Transactional;
  * o atendimento não aconteceu, e um atendimento remarcado aconteceu — só que
  * mais tarde. De quebra, perdia as observações já digitadas.
  *
- * <p><b>Não trava por status</b>, nem mesmo em consulta concluída. A trava, no
- * dia em que existir, tem de vir do que está preso à consulta — o prontuário —
- * e não da passagem do tempo. É a mesma lógica que já vale para excluir animal:
- * quem recusa é a chave estrangeira do histórico, não uma checagem de estado.
- * Enquanto não há prontuário, não há o que proteger, e travar agora só
- * impediria corrigir um erro de digitação.
+ * <p><b>Não trava por status — trava pelo prontuário.</b> Consulta concluída
+ * sem registro clínico continua editável; consulta com atendimento concluído,
+ * não. A trava vem do que está preso à consulta, não da passagem do tempo, que
+ * é a mesma lógica de excluir animal: quem recusa é o histórico, não uma
+ * checagem de estado.
+ *
+ * <p>Rascunho não trava nada: ela abriu a tela e desistiu, e isso não é fato
+ * registrado.
  *
  * <p>Chama os dois métodos da entidade porque são coisas diferentes:
  * {@code reagendar} move o atendimento no tempo, {@code atualizarDados} conserta
@@ -35,11 +38,15 @@ public class AtualizarConsultaService {
 
     private final ConsultaRepository consultaRepository;
     private final ResumirAnimaisService resumirAnimaisService;
+    private final RegistroClinicoDaConsulta registroClinico;
 
     public AtualizarConsultaService(
-            ConsultaRepository consultaRepository, ResumirAnimaisService resumirAnimaisService) {
+            ConsultaRepository consultaRepository,
+            ResumirAnimaisService resumirAnimaisService,
+            RegistroClinicoDaConsulta registroClinico) {
         this.consultaRepository = consultaRepository;
         this.resumirAnimaisService = resumirAnimaisService;
+        this.registroClinico = registroClinico;
     }
 
     @Transactional
@@ -49,6 +56,13 @@ public class AtualizarConsultaService {
                 consultaRepository
                         .findById(idConsulta)
                         .orElseThrow(() -> new ConsultaNaoEncontradaException(idConsulta));
+
+        // A trava chegou com o prontuário, exatamente como estava previsto:
+        // consulta registrada aconteceu, e mudar a hora dela seria reescrever
+        // um fato. A correção passa a ser retificação do atendimento.
+        if (registroClinico.temAtendimentoConcluido(idConsulta)) {
+            throw new ConsultaComRegistroClinicoException();
+        }
 
         consulta.reagendar(request.dataHora(), request.duracaoMinutos());
         consulta.atualizarDados(
