@@ -23,11 +23,15 @@ public class AlterarStatusConsultaService {
 
     private final ConsultaRepository consultaRepository;
     private final ResumirAnimaisService resumirAnimaisService;
+    private final RegistroClinicoDaConsulta registroClinico;
 
     public AlterarStatusConsultaService(
-            ConsultaRepository consultaRepository, ResumirAnimaisService resumirAnimaisService) {
+            ConsultaRepository consultaRepository,
+            ResumirAnimaisService resumirAnimaisService,
+            RegistroClinicoDaConsulta registroClinico) {
         this.consultaRepository = consultaRepository;
         this.resumirAnimaisService = resumirAnimaisService;
+        this.registroClinico = registroClinico;
     }
 
     @Transactional
@@ -42,6 +46,7 @@ public class AlterarStatusConsultaService {
         return ConsultaResponseDto.de(
                 consulta,
                 resumirAnimaisService.resumirAnimais(Set.of(consulta.getIdAnimal()))
-                        .get(consulta.getIdAnimal()));
+                        .get(consulta.getIdAnimal()),
+                !registroClinico.consultasComAtendimento(Set.of(idConsulta)).isEmpty());
     }
 }

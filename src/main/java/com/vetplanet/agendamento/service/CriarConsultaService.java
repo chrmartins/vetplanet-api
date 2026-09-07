@@ -61,6 +61,7 @@ public class CriarConsultaService {
         consultaRepository.save(consulta);
         log.info("Consulta {} marcada para {}", consulta.getId(), consulta.getDataHora());
 
-        return ConsultaResponseDto.de(consulta, animal);
+        // Consulta recém-criada nunca tem registro: o atendimento nasce depois.
+        return ConsultaResponseDto.de(consulta, animal, false);
     }
 }

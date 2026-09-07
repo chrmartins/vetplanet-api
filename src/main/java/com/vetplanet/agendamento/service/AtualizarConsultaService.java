@@ -71,10 +71,13 @@ public class AtualizarConsultaService {
                 request.enderecoAtendimento(),
                 request.observacoes());
 
+        // Chegou até aqui, então não havia atendimento concluído. Pode haver
+        // rascunho — que não trava a edição, mas o cartão precisa saber.
         return ConsultaResponseDto.de(
                 consulta,
                 resumirAnimaisService
                         .resumirAnimais(Set.of(consulta.getIdAnimal()))
-                        .get(consulta.getIdAnimal()));
+                        .get(consulta.getIdAnimal()),
+                !registroClinico.consultasComAtendimento(Set.of(idConsulta)).isEmpty());
     }
 }

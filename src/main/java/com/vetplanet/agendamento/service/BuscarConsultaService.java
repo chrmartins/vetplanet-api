@@ -21,11 +21,15 @@ public class BuscarConsultaService {
 
     private final ConsultaRepository consultaRepository;
     private final ResumirAnimaisService resumirAnimaisService;
+    private final RegistroClinicoDaConsulta registroClinico;
 
     public BuscarConsultaService(
-            ConsultaRepository consultaRepository, ResumirAnimaisService resumirAnimaisService) {
+            ConsultaRepository consultaRepository,
+            ResumirAnimaisService resumirAnimaisService,
+            RegistroClinicoDaConsulta registroClinico) {
         this.consultaRepository = consultaRepository;
         this.resumirAnimaisService = resumirAnimaisService;
+        this.registroClinico = registroClinico;
     }
 
     @Transactional(readOnly = true)
@@ -39,6 +43,7 @@ public class BuscarConsultaService {
                 consulta,
                 resumirAnimaisService
                         .resumirAnimais(Set.of(consulta.getIdAnimal()))
-                        .get(consulta.getIdAnimal()));
+                        .get(consulta.getIdAnimal()),
+                !registroClinico.consultasComAtendimento(Set.of(idConsulta)).isEmpty());
     }
 }

@@ -30,10 +30,26 @@ public record ConsultaResponseDto(
         boolean urgente,
         String enderecoAtendimento,
         String observacoes,
+        /**
+         * A consulta já tem atendimento — rascunho ou concluído?
+         *
+         * <p>Serve para o cartão da Agenda escolher entre "Iniciar
+         * atendimento" e "Continuar atendimento". Combinado com o status,
+         * cobre os três estados: {@code CONCLUIDA} quer dizer registro
+         * fechado, porque desde que o prontuário existe essa é a única forma
+         * de uma consulta concluir.
+         *
+         * <p><b>Quem monta o DTO precisa informar</b> — não há valor padrão,
+         * pelo mesmo motivo do {@code podeExcluir} do animal: um default
+         * silencioso voltaria a mentir no dia em que alguém esquecesse de
+         * perguntar.
+         */
+        boolean temRegistroClinico,
         OffsetDateTime criadoEm,
         OffsetDateTime atualizadoEm) {
 
-    public static ConsultaResponseDto de(ConsultaEntity consulta, ResumoAnimalDto resumo) {
+    public static ConsultaResponseDto de(
+            ConsultaEntity consulta, ResumoAnimalDto resumo, boolean temRegistroClinico) {
         return new ConsultaResponseDto(
                 consulta.getId(),
                 consulta.getIdAnimal(),
@@ -47,6 +63,7 @@ public record ConsultaResponseDto(
                 consulta.isUrgente(),
                 consulta.getEnderecoAtendimento(),
                 consulta.getObservacoes(),
+                temRegistroClinico,
                 consulta.getCriadoEm(),
                 consulta.getAtualizadoEm());
     }

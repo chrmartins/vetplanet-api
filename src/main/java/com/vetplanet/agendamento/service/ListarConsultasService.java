@@ -8,6 +8,7 @@ import com.vetplanet.cliente.service.ResumirAnimaisService;
 import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
@@ -18,18 +19,23 @@ import org.springframework.transaction.annotation.Transactional;
  * painel lateral.
  *
  * <p>Os nomes de animal e tutor são resolvidos **numa chamada só** para todo o
- * intervalo. Resolver por consulta seria N+1, e um mês cheio tem dezenas.
+ * intervalo, e o mesmo vale para saber quais já têm registro clínico. Resolver
+ * por consulta seria N+1, e um mês cheio tem dezenas.
  */
 @Service
 public class ListarConsultasService {
 
     private final ConsultaRepository consultaRepository;
     private final ResumirAnimaisService resumirAnimaisService;
+    private final RegistroClinicoDaConsulta registroClinico;
 
     public ListarConsultasService(
-            ConsultaRepository consultaRepository, ResumirAnimaisService resumirAnimaisService) {
+            ConsultaRepository consultaRepository,
+            ResumirAnimaisService resumirAnimaisService,
+            RegistroClinicoDaConsulta registroClinico) {
         this.consultaRepository = consultaRepository;
         this.resumirAnimaisService = resumirAnimaisService;
+        this.registroClinico = registroClinico;
     }
 
     @Transactional(readOnly = true)
@@ -52,8 +58,19 @@ public class ListarConsultasService {
                 resumirAnimaisService.resumirAnimais(
                         consultas.stream().map(ConsultaEntity::getIdAnimal).collect(Collectors.toSet()));
 
+        // Numa consulta só, como os nomes: perguntar por linha seria N+1, e um
+        // mês cheio tem dezenas.
+        Set<UUID> comRegistro =
+                registroClinico.consultasComAtendimento(
+                        consultas.stream().map(ConsultaEntity::getId).collect(Collectors.toSet()));
+
         return consultas.stream()
-                .map(consulta -> ConsultaResponseDto.de(consulta, animais.get(consulta.getIdAnimal())))
+                .map(
+                        consulta ->
+                                ConsultaResponseDto.de(
+                                        consulta,
+                                        animais.get(consulta.getIdAnimal()),
+                                        comRegistro.contains(consulta.getId())))
                 .toList();
     }
 }
