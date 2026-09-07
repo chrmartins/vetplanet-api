@@ -443,6 +443,18 @@ redefinição de senha pelo administrador.
   foram definidos** — perguntar antes de assumir.
 - Escopo do MVP: **só o clínico** (cadastro, agendamento, prontuário).
   Faturamento fica para depois.
+- **O prontuário é documento técnico-legal**, com conteúdo definido pela
+  Resolução CFMV nº 1.321/2020 (alterada pela nº 1.653/2025). O que a norma
+  exige, o que ela **não** exige e as decisões tomadas estão em
+  [`docs/prontuario.md`](docs/prontuario.md). Dois pontos que circulam errados
+  em blogs de fornecedores e foram verificados no texto oficial: a guarda é de
+  **5 anos** após o último atendimento (não 20), e **não há exigência de
+  assinatura ICP-Brasil** — a única menção a ICP na resolução está no rodapé
+  do próprio PDF do Diário Oficial.
+- **Prontuário exige nome completo e número de CRMV** do profissional
+  (Art. 9º, II e VIII). Consequência: `acesso.usuario` precisa de campo CRMV,
+  e **perfil não é profissão** — o `ADMINISTRADOR` não herda o direito de
+  assinar prontuário.
 
 ## Deploy e o primeiro administrador
 
