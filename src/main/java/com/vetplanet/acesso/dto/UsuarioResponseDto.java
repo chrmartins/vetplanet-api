@@ -17,6 +17,8 @@ public record UsuarioResponseDto(
         String nomeCompleto,
         String email,
         PerfilAcesso perfilAcesso,
+        /** Nulo para quem não é veterinário. */
+        String crmv,
         boolean ativo,
         OffsetDateTime criadoEm,
         OffsetDateTime atualizadoEm) {
@@ -27,6 +29,7 @@ public record UsuarioResponseDto(
                 usuario.getNomeCompleto(),
                 usuario.getEmail(),
                 usuario.getPerfilAcesso(),
+                usuario.getCrmv(),
                 usuario.isAtivo(),
                 usuario.getCriadoEm(),
                 usuario.getAtualizadoEm());

@@ -2,7 +2,9 @@ package com.vetplanet.acesso.service;
 
 import com.vetplanet.acesso.dto.CriarUsuarioRequestDto;
 import com.vetplanet.acesso.dto.UsuarioResponseDto;
+import com.vetplanet.acesso.entity.PerfilAcesso;
 import com.vetplanet.acesso.entity.UsuarioEntity;
+import com.vetplanet.acesso.exception.CrmvObrigatorioException;
 import com.vetplanet.acesso.exception.EmailJaCadastradoException;
 import com.vetplanet.acesso.repository.UsuarioRepository;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -36,8 +38,23 @@ public class CriarUsuarioService {
                         request.nomeCompleto(),
                         request.email(),
                         passwordEncoder.encode(request.senha()),
-                        request.perfilAcesso());
+                        request.perfilAcesso(),
+                        exigirCrmvDeVeterinario(request.perfilAcesso(), request.crmv()));
 
         return UsuarioResponseDto.de(usuarioRepository.save(usuario));
+    }
+
+    /**
+     * Veterinário precisa de CRMV; os outros perfis não têm.
+     *
+     * <p>Vive aqui, e não numa anotação, porque depende da combinação de dois
+     * campos. Vive num método com nome, e não solto no meio do fluxo, porque
+     * {@code AtualizarUsuarioService} aplica exatamente a mesma regra — e duas
+     * cópias divergiriam no primeiro ajuste.
+     */
+    static String exigirCrmvDeVeterinario(PerfilAcesso perfil, String crmv) {
+        if (perfil != PerfilAcesso.VETERINARIO) return null;
+        if (crmv == null || crmv.isBlank()) throw new CrmvObrigatorioException();
+        return crmv.trim();
     }
 }

@@ -37,7 +37,11 @@ public class AtualizarUsuarioService {
         garantirQueSobraAdministrador(usuario, request.perfilAcesso());
 
         usuario.atualizarDados(
-                request.nomeCompleto(), request.email(), request.perfilAcesso());
+                request.nomeCompleto(),
+                request.email(),
+                request.perfilAcesso(),
+                CriarUsuarioService.exigirCrmvDeVeterinario(
+                        request.perfilAcesso(), request.crmv()));
 
         // Sem save() explícito: a entidade está gerenciada dentro da transação,
         // então o Hibernate persiste a mudança no commit.

@@ -78,7 +78,8 @@ class UsuarioControllerTest {
                                                   "nomeCompleto": "Rafaela Soares",
                                                   "email": "Rafaela@RafaelaSoares.vet",
                                                   "senha": "senhaSegura123",
-                                                  "perfilAcesso": "VETERINARIO"
+                                                  "perfilAcesso": "VETERINARIO",
+                                                  "crmv": "CRMV-RJ 12345"
                                                 }"""))
                         .andExpect(status().isCreated())
                         // E-mail normalizado para minúsculas na entrada.
@@ -111,7 +112,8 @@ class UsuarioControllerTest {
                                           "nomeCompleto": "Primeira",
                                           "email": "rafaela@rafaelasoares.vet",
                                           "senha": "senhaSegura123",
-                                          "perfilAcesso": "VETERINARIO"
+                                          "perfilAcesso": "VETERINARIO",
+                                                  "crmv": "CRMV-RJ 12345"
                                         }"""))
                 .andExpect(status().isCreated());
 
@@ -197,5 +199,51 @@ class UsuarioControllerTest {
                                         {"senhaAtual":"qualquer123",
                                          "novaSenha":"novaSenha123"}"""))
                 .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    @WithMockUser(roles = "ADMINISTRADOR")
+    @DisplayName("veterinário sem CRMV é recusado com 422 — o prontuário exige o número")
+    void recusaVeterinarioSemCrmv() throws Exception {
+        // Res. CFMV 1.321/2020, Art. 9º, II e VIII: o prontuário identifica o
+        // profissional por nome completo e número de CRMV. Descobrir a falta na
+        // hora de registrar o atendimento seria tarde demais.
+        mockMvc.perform(
+                        post("/api/usuarios")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(
+                                        """
+                                        {
+                                          "nomeCompleto": "Sem Registro",
+                                          "email": "sem.crmv@rafaelasoares.vet",
+                                          "senha": "senhaSegura123",
+                                          "perfilAcesso": "VETERINARIO"
+                                        }
+                                        """))
+                .andExpect(status().isUnprocessableEntity())
+                .andExpect(jsonPath("$.mensagem").value(org.hamcrest.Matchers.containsString("CRMV")));
+    }
+
+    @Test
+    @WithMockUser(roles = "ADMINISTRADOR")
+    @DisplayName("CRMV mandado para quem não é veterinário é descartado, não recusado")
+    void descartaCrmvDeQuemNaoAssina() throws Exception {
+        // Recusar seria implicância: o dado não faz sentido para o perfil, e o
+        // certo é ignorá-lo em vez de obrigar a apagar o campo na tela.
+        mockMvc.perform(
+                        post("/api/usuarios")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(
+                                        """
+                                        {
+                                          "nomeCompleto": "Atendente",
+                                          "email": "atendente.crmv@rafaelasoares.vet",
+                                          "senha": "senhaSegura123",
+                                          "perfilAcesso": "ATENDENTE",
+                                          "crmv": "CRMV-RJ 00000"
+                                        }
+                                        """))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.crmv").doesNotExist());
     }
 }

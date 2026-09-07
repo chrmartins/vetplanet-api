@@ -91,7 +91,8 @@ public class AdministradorInicialConfig {
                             nome,
                             email,
                             passwordEncoder.encode(senha),
-                            PerfilAcesso.ADMINISTRADOR));
+                            PerfilAcesso.ADMINISTRADOR,
+                            null));
 
             log.info(
                     "Administrador inicial criado para {}. Troque a senha no primeiro acesso e"

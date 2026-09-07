@@ -47,6 +47,21 @@ public class UsuarioEntity {
     @Column(name = "perfil_acesso", nullable = false)
     private PerfilAcesso perfilAcesso;
 
+    /**
+     * Número de inscrição no CRMV.
+     *
+     * <p><b>Obrigatório para {@code VETERINARIO}, nulo nos demais.</b> A
+     * Resolução CFMV nº 1.321/2020, Art. 9º, II e VIII, exige que o prontuário
+     * identifique o profissional por nome completo e número de CRMV — sem isto
+     * não há como registrar atendimento em conformidade.
+     *
+     * <p>Nulo para administrador e atendente porque <b>perfil não é
+     * profissão</b>: preencher para eles seria dizer que assinam prontuário, e
+     * não assinam.
+     */
+    @Column(name = "crmv")
+    private String crmv;
+
     @Column(name = "ativo", nullable = false)
     private boolean ativo;
 
@@ -65,11 +80,16 @@ public class UsuarioEntity {
     protected UsuarioEntity() {}
 
     private UsuarioEntity(
-            String nomeCompleto, String email, String senhaHash, PerfilAcesso perfilAcesso) {
+            String nomeCompleto,
+            String email,
+            String senhaHash,
+            PerfilAcesso perfilAcesso,
+            String crmv) {
         this.nomeCompleto = nomeCompleto.trim();
         this.email = normalizarEmail(email);
         this.senhaHash = senhaHash;
         this.perfilAcesso = perfilAcesso;
+        this.crmv = crmvDoPerfil(perfilAcesso, crmv);
         this.ativo = true;
         this.criadoEm = agora();
         this.atualizadoEm = this.criadoEm;
@@ -91,16 +111,43 @@ public class UsuarioEntity {
      *     conhece senha em texto puro.
      */
     public static UsuarioEntity criar(
-            String nomeCompleto, String email, String senhaHash, PerfilAcesso perfilAcesso) {
-        return new UsuarioEntity(nomeCompleto, email, senhaHash, perfilAcesso);
+            String nomeCompleto,
+            String email,
+            String senhaHash,
+            PerfilAcesso perfilAcesso,
+            String crmv) {
+        return new UsuarioEntity(nomeCompleto, email, senhaHash, perfilAcesso, crmv);
     }
 
     /** Atualiza os dados cadastrais. A senha tem caminho próprio. */
-    public void atualizarDados(String nomeCompleto, String email, PerfilAcesso perfilAcesso) {
+    public void atualizarDados(
+            String nomeCompleto, String email, PerfilAcesso perfilAcesso, String crmv) {
         this.nomeCompleto = nomeCompleto.trim();
         this.email = normalizarEmail(email);
         this.perfilAcesso = perfilAcesso;
+        this.crmv = crmvDoPerfil(perfilAcesso, crmv);
         marcarAtualizacao();
+    }
+
+    /**
+     * O CRMV que este perfil pode ter.
+     *
+     * <p><b>Limpa o número ao deixar de ser veterinário.</b> Sem isto, rebaixar
+     * um veterinário para atendente deixaria o CRMV para trás, e a linha
+     * violaria o check do banco — o erro apareceria como 500 no meio de uma
+     * edição comum, em vez de o dado simplesmente ficar certo.
+     *
+     * <p>Não valida a presença: quem exige CRMV de veterinário é o Bean
+     * Validation no DTO, onde a mensagem chega ao lado do campo.
+     */
+    private static String crmvDoPerfil(PerfilAcesso perfil, String crmv) {
+        if (perfil != PerfilAcesso.VETERINARIO) return null;
+        return crmv == null || crmv.isBlank() ? null : crmv.trim();
+    }
+
+    /** Assina prontuário? Só veterinário com CRMV — Res. CFMV 1.321/2020. */
+    public boolean podeAssinarProntuario() {
+        return perfilAcesso == PerfilAcesso.VETERINARIO && crmv != null && !crmv.isBlank();
     }
 
     public void trocarSenha(String novaSenhaHash) {
@@ -141,6 +188,10 @@ public class UsuarioEntity {
 
     public PerfilAcesso getPerfilAcesso() {
         return perfilAcesso;
+    }
+
+    public String getCrmv() {
+        return crmv;
     }
 
     public boolean isAtivo() {
