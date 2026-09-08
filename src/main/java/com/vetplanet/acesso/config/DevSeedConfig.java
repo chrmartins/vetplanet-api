@@ -48,7 +48,8 @@ public class DevSeedConfig {
                             "Administrador de Desenvolvimento",
                             email,
                             passwordEncoder.encode(senha),
-                            PerfilAcesso.ADMINISTRADOR));
+                            PerfilAcesso.ADMINISTRADOR,
+                            null));
 
             log.warn(
                     """

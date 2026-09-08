@@ -25,10 +25,47 @@ public interface AnimalRepository extends JpaRepository<AnimalEntity, UUID> {
     @Query("select a from AnimalEntity a join fetch a.tutor where a.id = :idAnimal")
     Optional<AnimalEntity> buscarComTutor(UUID idAnimal);
 
-    /** Busca por parte do nome do animal — "a gata Mel", sem saber o tutor. */
+    /**
+     * Vários animais com o tutor junto, numa consulta só.
+     *
+     * <p>Usado por {@code ResumirAnimaisService} para a Agenda montar
+     * "Thor · J. Lima" sem disparar uma consulta por linha.
+     */
+    @Query("select a from AnimalEntity a join fetch a.tutor where a.id in :ids")
+    List<AnimalEntity> buscarComTutorPorIds(java.util.Collection<UUID> ids);
+
+    /** Em acompanhamento, com o tutor junto — alimenta o seletor da Agenda. */
+    @Query(
+            "select a from AnimalEntity a join fetch a.tutor "
+                    + "where a.situacao = :situacao and a.tutor.ativo = true "
+                    + "order by a.nome asc")
+    List<AnimalEntity> buscarAtivosComTutor(com.vetplanet.cliente.entity.SituacaoAnimal situacao);
+
+    /**
+     * A busca da tela de animais — "a gata Mel", sem saber o tutor.
+     *
+     * <p><b>{@code trecho} vazio lista todos</b> — e vazio, não nulo, de
+     * propósito. Com {@code (:trecho is null or lower(...) like ...)} o
+     * Postgres não tem como inferir o tipo do parâmetro nulo, assume
+     * {@code bytea} e a consulta estoura com "function lower(bytea) does not
+     * exist". String vazia vira {@code like '%%'}, que casa com tudo, e o
+     * problema deixa de existir em vez de ser contornado com cast.
+     *
+     * <p>As situações vêm de fora porque a tela decide o que mostrar: só quem
+     * está em acompanhamento, por padrão, ou também inativos e falecidos
+     * quando ela pede.
+     *
+     * <p>O tutor inativo cai junto: se ela parou de atender a dona Ana, os
+     * bichos da Ana não deveriam aparecer na busca do dia a dia.
+     */
     @Query(
             "select a from AnimalEntity a join fetch a.tutor "
                     + "where lower(a.nome) like lower(concat('%', :trecho, '%')) "
+                    + "and a.situacao in :situacoes "
+                    + "and (:incluirInativos = true or a.tutor.ativo = true) "
                     + "order by a.nome asc")
-    List<AnimalEntity> buscarPorNomeComTutor(String trecho);
+    List<AnimalEntity> buscarComTutor(
+            String trecho,
+            java.util.Collection<com.vetplanet.cliente.entity.SituacaoAnimal> situacoes,
+            boolean incluirInativos);
 }

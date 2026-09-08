@@ -2,7 +2,9 @@ package com.vetplanet.cliente.controller;
 
 import com.vetplanet.cliente.dto.AnimalResponseDto;
 import com.vetplanet.cliente.dto.AtualizarAnimalRequestDto;
+import com.vetplanet.cliente.dto.AnimalNaListaDto;
 import com.vetplanet.cliente.service.AtualizarAnimalService;
+import com.vetplanet.cliente.service.ListarAnimaisService;
 import com.vetplanet.cliente.service.BuscarAnimalService;
 import com.vetplanet.cliente.service.InativarAnimalService;
 import com.vetplanet.cliente.service.ReativarAnimalService;
@@ -17,6 +19,7 @@ import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
@@ -43,6 +46,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/animais")
 public class AnimalController {
 
+    private final ListarAnimaisService listarAnimaisService;
     private final BuscarAnimalService buscarAnimalService;
     private final AtualizarAnimalService atualizarAnimalService;
     private final RegistrarObitoService registrarObitoService;
@@ -51,18 +55,41 @@ public class AnimalController {
     private final ExcluirAnimalService excluirAnimalService;
 
     public AnimalController(
+            ListarAnimaisService listarAnimaisService,
             BuscarAnimalService buscarAnimalService,
             AtualizarAnimalService atualizarAnimalService,
             RegistrarObitoService registrarObitoService,
             InativarAnimalService inativarAnimalService,
             ReativarAnimalService reativarAnimalService,
             ExcluirAnimalService excluirAnimalService) {
+        this.listarAnimaisService = listarAnimaisService;
         this.buscarAnimalService = buscarAnimalService;
         this.atualizarAnimalService = atualizarAnimalService;
         this.registrarObitoService = registrarObitoService;
         this.inativarAnimalService = inativarAnimalService;
         this.reativarAnimalService = reativarAnimalService;
         this.excluirAnimalService = excluirAnimalService;
+    }
+
+    /**
+     * Busca de animais, com o nome do tutor junto.
+     *
+     * <p>Uma lista só, e não "escolha o tutor, depois o bicho": ela pensa "a
+     * Mel, da dona Ana", e às vezes lembra do bicho sem lembrar de quem é.
+     *
+     * <p>Sem parâmetro nenhum devolve quem está em acompanhamento, que é
+     * exatamente o que o seletor da Agenda precisa — a mesma rota serve às
+     * duas telas.
+     *
+     * @param busca trecho do nome do animal; ausente lista todos
+     * @param incluirInativos por padrão a lista mostra só quem está em
+     *     acompanhamento, com tutor ativo
+     */
+    @GetMapping
+    public java.util.List<AnimalNaListaDto> listar(
+            @RequestParam(required = false) String busca,
+            @RequestParam(defaultValue = "false") boolean incluirInativos) {
+        return listarAnimaisService.listarAnimais(busca, incluirInativos);
     }
 
     @GetMapping("/{idAnimal}")

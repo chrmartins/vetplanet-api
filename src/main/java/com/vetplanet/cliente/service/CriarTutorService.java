@@ -1,6 +1,7 @@
 package com.vetplanet.cliente.service;
 
 import com.vetplanet.cliente.dto.CriarAnimalRequestDto;
+import com.vetplanet.cliente.dto.AnimalResponseDto;
 import com.vetplanet.cliente.dto.CriarTutorRequestDto;
 import com.vetplanet.cliente.dto.TutorResponseDto;
 import com.vetplanet.cliente.entity.AnimalEntity;
@@ -58,7 +59,10 @@ public class CriarTutorService {
         // Sem nome nem telefone no log: são dados pessoais (ver LGPD no CLAUDE.md).
         log.info("Tutor {} cadastrado com {} animal(is)", tutor.getId(), animais.size());
 
-        return TutorResponseDto.completo(tutor, animais);
+        // Tutor recém-criado: por definição nenhum animal dele tem histórico
+        // ainda, então não há o que perguntar ao domínio vizinho.
+        return TutorResponseDto.completo(
+                tutor, animais.stream().map(animal -> AnimalResponseDto.de(animal, true)).toList());
     }
 
     private static AnimalEntity montarAnimal(TutorEntity tutor, CriarAnimalRequestDto dados) {

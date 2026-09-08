@@ -6,6 +6,7 @@ import com.vetplanet.cliente.entity.AnimalEntity;
 import com.vetplanet.cliente.entity.TutorEntity;
 import com.vetplanet.cliente.exception.TutorNaoEncontradoException;
 import com.vetplanet.cliente.repository.AnimalRepository;
+import com.vetplanet.cliente.service.HistoricoDoAnimal;
 import com.vetplanet.cliente.repository.TutorRepository;
 import java.util.UUID;
 import org.springframework.stereotype.Service;
@@ -17,11 +18,13 @@ public class AdicionarAnimalService {
 
     private final TutorRepository tutorRepository;
     private final AnimalRepository animalRepository;
+    private final HistoricoDoAnimal historicoDoAnimal;
 
     public AdicionarAnimalService(
-            TutorRepository tutorRepository, AnimalRepository animalRepository) {
+            TutorRepository tutorRepository, AnimalRepository animalRepository, HistoricoDoAnimal historicoDoAnimal) {
         this.tutorRepository = tutorRepository;
         this.animalRepository = animalRepository;
+        this.historicoDoAnimal = historicoDoAnimal;
     }
 
     @Transactional
@@ -43,6 +46,6 @@ public class AdicionarAnimalService {
                         request.observacoes());
 
         animalRepository.save(animal);
-        return AnimalResponseDto.de(animal);
+        return AnimalResponseDto.de(animal, !historicoDoAnimal.temHistorico(animal.getId()));
     }
 }

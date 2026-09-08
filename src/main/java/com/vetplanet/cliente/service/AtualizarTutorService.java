@@ -4,6 +4,7 @@ import com.vetplanet.cliente.dto.AtualizarTutorRequestDto;
 import com.vetplanet.cliente.dto.TutorResponseDto;
 import com.vetplanet.cliente.entity.TutorEntity;
 import com.vetplanet.cliente.exception.TutorNaoEncontradoException;
+import com.vetplanet.cliente.dto.AnimalResponseDto;
 import com.vetplanet.cliente.repository.AnimalRepository;
 import com.vetplanet.cliente.repository.TutorRepository;
 import java.util.UUID;
@@ -16,11 +17,13 @@ public class AtualizarTutorService {
 
     private final TutorRepository tutorRepository;
     private final AnimalRepository animalRepository;
+    private final HistoricoDoAnimal historicoDoAnimal;
 
     public AtualizarTutorService(
-            TutorRepository tutorRepository, AnimalRepository animalRepository) {
+            TutorRepository tutorRepository, AnimalRepository animalRepository, HistoricoDoAnimal historicoDoAnimal) {
         this.tutorRepository = tutorRepository;
         this.animalRepository = animalRepository;
+        this.historicoDoAnimal = historicoDoAnimal;
     }
 
     @Transactional
@@ -37,6 +40,13 @@ public class AtualizarTutorService {
                 request.endereco() == null ? null : request.endereco().paraEntidade(),
                 request.observacoes());
 
-        return TutorResponseDto.completo(tutor, animalRepository.findByTutorIdOrderByNomeAsc(idTutor));
+        return TutorResponseDto.completo(tutor, montarAnimais(idTutor));
+    }
+
+    /** Cada animal precisa saber se ainda pode ser excluído. */
+    private java.util.List<AnimalResponseDto> montarAnimais(java.util.UUID idTutor) {
+        return animalRepository.findByTutorIdOrderByNomeAsc(idTutor).stream()
+                .map(animal -> AnimalResponseDto.de(animal, !historicoDoAnimal.temHistorico(animal.getId())))
+                .toList();
     }
 }

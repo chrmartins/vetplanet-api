@@ -25,4 +25,15 @@ public record CriarUsuarioRequestDto(
         @NotBlank(message = "Informe a senha.")
                 @Size(min = 8, max = 72, message = "A senha deve ter entre 8 e 72 caracteres.")
                 String senha,
-        @NotNull(message = "Informe o perfil de acesso.") PerfilAcesso perfilAcesso) {}
+        @NotNull(message = "Informe o perfil de acesso.") PerfilAcesso perfilAcesso,
+        /**
+         * Número de inscrição no CRMV.
+         *
+         * <p>Obrigatório quando o perfil é {@code VETERINARIO} e ignorado nos
+         * demais — a checagem cruzada fica no service, porque depende da
+         * combinação dos dois campos e nenhuma anotação de campo a pega.
+         *
+         * <p>Exigência da Resolução CFMV nº 1.321/2020, Art. 9º, II e VIII:
+         * o prontuário identifica o profissional por nome e número de CRMV.
+         */
+        @Size(max = 30, message = "CRMV muito longo.") String crmv) {}

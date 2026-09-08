@@ -402,15 +402,52 @@ redefinição de senha pelo administrador.
   em resposta de API — `UsuarioResponseDto` não expõe `senhaHash`.
 - **Nenhuma exclusão física** de usuário, consulta ou prontuário — sempre
   inativação por status (`ativo`, `status_consulta`).
-- **Prontuário é imutável após confirmado** — correção gera registro de
-  retificação, nunca sobrescreve o original.
+- **Duas exceções, com o mesmo critério: não há histórico a proteger.** Animal
+  sem consulta (o banco recusa o resto, por chave estrangeira) e bloqueio de
+  agenda, que é regra de disponibilidade e não fato ocorrido. Ver
+  `ExcluirAnimalService` e `ExcluirBloqueioService`, que documentam o porquê.
+- **Prontuário é sempre editável, e toda alteração deixa rastro.** A versão
+  anterior desta regra dizia o contrário — "imutável após confirmado, correção
+  gera retificação" — e caiu por um argumento melhor: a veterinária lembra do
+  nódulo na pata depois de sair da casa, ou a tutora conta algo no portão.
+  **Impedir o registro de crescer não protege o prontuário; empobrece**, que é
+  o oposto do que a trava pretendia. E é o modelo do próprio CFMV, que pede
+  "evolução diária" (Art. 9º, VIII) — registro que cresce, não documento que
+  fecha.
+  O que dá valor ao documento não é a impossibilidade de editar; é o **rastro**.
+  Cada campo alterado depois da conclusão vira uma linha em
+  `prontuario.alteracao_atendimento`, com autor, CRMV, valor antigo e novo,
+  gravada sozinha — ela não preenche formulário de correção nem escreve motivo.
+  Um prontuário que se reescreve em silêncio não prova nada; um que registra a
+  mudança prova, e ainda deixa acrescentar.
+  **Quem pode escrever continua restrito**: só veterinário com CRMV. Caiu a
+  trava por tempo, não a trava por pessoa.
 
 ## Regras de negócio
 
 - Atendimento é **sempre presencial e domiciliar**. Não há telemedicina — não
   implementar nem prever videochamada.
 - Consulta não é excluída: muda de status (`solicitada`, `confirmada`,
-  `cancelada`, `concluida`).
+  `cancelada`, `concluida`). **Sem máquina de estados** — a veterinária é a
+  única operadora e corrigir um clique errado precisa ser trivial.
+- **`PUT /api/consultas/{id}` corrige e remarca, e não aceita `idAnimal` nem
+  `status`.** Remarcar precisa existir porque cancelar e recriar escreveria um
+  fato falso — `CANCELADA` quer dizer que não aconteceu. Trocar o animal não
+  entra porque a consulta é a âncora do histórico clínico dele; o caso do bicho
+  errado se resolve cancelando, e ali o cancelamento é honesto. Status tem
+  endpoint próprio: é fato que ocorre, não campo de formulário.
+- **A edição não trava por status.** A trava, quando existir, vem do prontuário
+  preso à consulta — não do relógio. É a mesma lógica do `ExcluirAnimalService`:
+  quem recusa é a chave estrangeira, não uma checagem de estado.
+- **`agendamento.bloqueio` é o tempo indisponível**, em duas formas na mesma
+  tabela: semanal (`dia_da_semana`) ou período (`data_inicio`/`data_fim`), e o
+  banco recusa a linha que tentar ser as duas. **As horas são civis de
+  America/Sao_Paulo, não UTC** — desvio deliberado da regra de persistência,
+  explicado na migração `V005`: bloqueio semanal não é um instante, é uma hora
+  do relógio da parede, e em UTC ele mudaria de horário junto com o offset do
+  fuso.
+- **Não existe disponibilidade positiva** ("atendo das 9h às 18h"). O que há é
+  o negativo. Perguntar antes de implementar a outra.
 - Perfis de acesso são fixos, em enum: `ADMINISTRADOR`, `VETERINARIO`,
   `ATENDENTE`. Ficam como coluna de `acesso.usuario` com `check` constraint,
   não como tabela — as permissões são conferidas em código. Vira tabela no
@@ -420,6 +457,18 @@ redefinição de senha pelo administrador.
   foram definidos** — perguntar antes de assumir.
 - Escopo do MVP: **só o clínico** (cadastro, agendamento, prontuário).
   Faturamento fica para depois.
+- **O prontuário é documento técnico-legal**, com conteúdo definido pela
+  Resolução CFMV nº 1.321/2020 (alterada pela nº 1.653/2025). O que a norma
+  exige, o que ela **não** exige e as decisões tomadas estão em
+  [`docs/prontuario.md`](docs/prontuario.md). Dois pontos que circulam errados
+  em blogs de fornecedores e foram verificados no texto oficial: a guarda é de
+  **5 anos** após o último atendimento (não 20), e **não há exigência de
+  assinatura ICP-Brasil** — a única menção a ICP na resolução está no rodapé
+  do próprio PDF do Diário Oficial.
+- **Prontuário exige nome completo e número de CRMV** do profissional
+  (Art. 9º, II e VIII). Consequência: `acesso.usuario` precisa de campo CRMV,
+  e **perfil não é profissão** — o `ADMINISTRADOR` não herda o direito de
+  assinar prontuário.
 
 ## Deploy e o primeiro administrador
 

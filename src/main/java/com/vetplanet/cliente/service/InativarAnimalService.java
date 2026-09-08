@@ -4,6 +4,7 @@ import com.vetplanet.cliente.dto.AnimalResponseDto;
 import com.vetplanet.cliente.entity.AnimalEntity;
 import com.vetplanet.cliente.exception.AnimalNaoEncontradoException;
 import com.vetplanet.cliente.repository.AnimalRepository;
+import com.vetplanet.cliente.service.HistoricoDoAnimal;
 import java.util.UUID;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -21,9 +22,11 @@ import org.springframework.transaction.annotation.Transactional;
 public class InativarAnimalService {
 
     private final AnimalRepository animalRepository;
+    private final HistoricoDoAnimal historicoDoAnimal;
 
-    public InativarAnimalService(AnimalRepository animalRepository) {
+    public InativarAnimalService(AnimalRepository animalRepository, HistoricoDoAnimal historicoDoAnimal) {
         this.animalRepository = animalRepository;
+        this.historicoDoAnimal = historicoDoAnimal;
     }
 
     @Transactional
@@ -33,6 +36,6 @@ public class InativarAnimalService {
                         .findById(idAnimal)
                         .orElseThrow(() -> new AnimalNaoEncontradoException(idAnimal));
         animal.inativar();
-        return AnimalResponseDto.de(animal);
+        return AnimalResponseDto.de(animal, !historicoDoAnimal.temHistorico(animal.getId()));
     }
 }

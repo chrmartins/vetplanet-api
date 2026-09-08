@@ -21,4 +21,15 @@ public record AtualizarUsuarioRequestDto(
                 @Email(message = "E-mail inválido.")
                 @Size(max = 180, message = "E-mail muito longo.")
                 String email,
-        @NotNull(message = "Informe o perfil de acesso.") PerfilAcesso perfilAcesso) {}
+        @NotNull(message = "Informe o perfil de acesso.") PerfilAcesso perfilAcesso,
+        /**
+         * Número de inscrição no CRMV.
+         *
+         * <p>Obrigatório quando o perfil é {@code VETERINARIO} e ignorado nos
+         * demais — a checagem cruzada fica no service, porque depende da
+         * combinação dos dois campos e nenhuma anotação de campo a pega.
+         *
+         * <p>Exigência da Resolução CFMV nº 1.321/2020, Art. 9º, II e VIII:
+         * o prontuário identifica o profissional por nome e número de CRMV.
+         */
+        @Size(max = 30, message = "CRMV muito longo.") String crmv) {}

@@ -46,7 +46,7 @@ class SessaoControllerTest {
                         "Rafaela Soares",
                         "rafaela@rafaelasoares.vet",
                         passwordEncoder.encode(SENHA),
-                        PerfilAcesso.ADMINISTRADOR));
+                        PerfilAcesso.ADMINISTRADOR, null));
     }
 
     private String entrarEObterToken() throws Exception {
@@ -165,7 +165,7 @@ class SessaoControllerTest {
                         "Outro Admin",
                         "outro@rafaelasoares.vet",
                         passwordEncoder.encode(SENHA),
-                        PerfilAcesso.ADMINISTRADOR));
+                        PerfilAcesso.ADMINISTRADOR, null));
 
         mockMvc.perform(
                         org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch(
