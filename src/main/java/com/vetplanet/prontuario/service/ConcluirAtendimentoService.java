@@ -4,7 +4,6 @@ import com.vetplanet.agendamento.entity.StatusConsulta;
 import com.vetplanet.agendamento.service.AlterarStatusConsultaService;
 import com.vetplanet.prontuario.dto.AtendimentoResponseDto;
 import com.vetplanet.prontuario.entity.AtendimentoEntity;
-import com.vetplanet.prontuario.exception.AtendimentoConcluidoException;
 import com.vetplanet.prontuario.exception.AtendimentoIncompletoException;
 import com.vetplanet.prontuario.exception.AtendimentoNaoEncontradoException;
 import com.vetplanet.prontuario.repository.AtendimentoRepository;
@@ -21,9 +20,12 @@ import org.springframework.transaction.annotation.Transactional;
  * dizendo "acabei" permitiriam marcar uma consulta como realizada sem o
  * documento que a lei exige que exista.
  *
- * <p>É o <b>ponto sem volta</b>. Antes daqui o rascunho se descarta à vontade;
- * depois, só retificação. Por isso a tela pergunta "tem certeza?" antes de
- * chamar este serviço.
+ * <p><b>Não é mais ponto sem volta.</b> A versão anterior travava o registro
+ * ao concluir; a regra caiu porque impedia acrescentar o que ela lembrasse
+ * depois — e prontuário que não cresce é prontuário pior. Concluir virou
+ * <b>marco</b>: diz quando ela deu o atendimento por terminado e encerra a
+ * consulta. O conteúdo segue editável, e cada mudança vai para o rastro
+ * ({@code RegistrarAtendimentoService}).
  */
 @Service
 public class ConcluirAtendimentoService {
@@ -45,7 +47,10 @@ public class ConcluirAtendimentoService {
                         .findById(idAtendimento)
                         .orElseThrow(() -> new AtendimentoNaoEncontradoException(idAtendimento));
 
-        if (atendimento.estaConcluido()) throw new AtendimentoConcluidoException();
+        // Concluir de novo não faz nada: já está concluído, e a consulta já
+        // foi encerrada. Devolver o estado atual é mais gentil que um erro —
+        // é o mesmo raciocínio que torna a abertura idempotente.
+        if (atendimento.estaConcluido()) return AtendimentoResponseDto.de(atendimento);
 
         // O banco tem o mesmo check (V010). A checagem aqui existe para a
         // mensagem dizer o que falta, em vez de estourar violação de constraint.

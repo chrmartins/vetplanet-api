@@ -94,21 +94,24 @@ public class AtendimentoController {
             summary = "Salva o conteúdo clínico do rascunho",
             description =
                     "Aceita o registro pela metade: nota clínica é escrita em pedaços, durante a "
-                            + "visita, e a tela salva sozinha enquanto ela digita. Recusa com 422 "
-                            + "se o atendimento já foi concluído — aí só retificação.")
+                            + "visita, e a tela salva sozinha enquanto ela digita. Aceita também "
+                            + "depois de concluído — o prontuário cresce, e impedir isso "
+                            + "empobreceria o documento. Toda alteração posterior à conclusão "
+                            + "vira linha no rastro, com autor, campo, valor antigo e novo.")
     public AtendimentoResponseDto registrar(
             @PathVariable UUID idAtendimento,
-            @Valid @RequestBody RegistrarAtendimentoRequestDto request) {
-        return registrarAtendimentoService.registrar(idAtendimento, request);
+            @Valid @RequestBody RegistrarAtendimentoRequestDto request,
+            Principal principal) {
+        return registrarAtendimentoService.registrar(idAtendimento, request, principal.getName());
     }
 
     @PatchMapping("/{idAtendimento}/conclusao")
     @Operation(
             summary = "Conclui o atendimento — e, com ele, a consulta",
             description =
-                    "Ponto sem volta: depois daqui o registro é imutável e só se corrige por "
-                            + "retificação. Conclui a consulta como consequência; não existe "
-                            + "outra forma de uma consulta virar CONCLUIDA.")
+                    "Marco, não cadeado: diz quando o atendimento foi dado por terminado e "
+                            + "conclui a consulta — não existe outra forma de uma consulta virar "
+                            + "CONCLUIDA. O conteúdo segue editável depois, com rastro.")
     public AtendimentoResponseDto concluir(@PathVariable UUID idAtendimento) {
         return concluirAtendimentoService.concluir(idAtendimento);
     }

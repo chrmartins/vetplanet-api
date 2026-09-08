@@ -406,8 +406,22 @@ redefinição de senha pelo administrador.
   sem consulta (o banco recusa o resto, por chave estrangeira) e bloqueio de
   agenda, que é regra de disponibilidade e não fato ocorrido. Ver
   `ExcluirAnimalService` e `ExcluirBloqueioService`, que documentam o porquê.
-- **Prontuário é imutável após confirmado** — correção gera registro de
-  retificação, nunca sobrescreve o original.
+- **Prontuário é sempre editável, e toda alteração deixa rastro.** A versão
+  anterior desta regra dizia o contrário — "imutável após confirmado, correção
+  gera retificação" — e caiu por um argumento melhor: a veterinária lembra do
+  nódulo na pata depois de sair da casa, ou a tutora conta algo no portão.
+  **Impedir o registro de crescer não protege o prontuário; empobrece**, que é
+  o oposto do que a trava pretendia. E é o modelo do próprio CFMV, que pede
+  "evolução diária" (Art. 9º, VIII) — registro que cresce, não documento que
+  fecha.
+  O que dá valor ao documento não é a impossibilidade de editar; é o **rastro**.
+  Cada campo alterado depois da conclusão vira uma linha em
+  `prontuario.alteracao_atendimento`, com autor, CRMV, valor antigo e novo,
+  gravada sozinha — ela não preenche formulário de correção nem escreve motivo.
+  Um prontuário que se reescreve em silêncio não prova nada; um que registra a
+  mudança prova, e ainda deixa acrescentar.
+  **Quem pode escrever continua restrito**: só veterinário com CRMV. Caiu a
+  trava por tempo, não a trava por pessoa.
 
 ## Regras de negócio
 

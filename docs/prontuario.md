@@ -143,17 +143,30 @@ número de CRMV**. Então:
   necessariamente veterinário. Perfil não é profissão, e quem administra o
   sistema não herda o direito de assinar prontuário.
 
-### 3. Quando o atendimento vira imutável? **Decisão nossa — a norma não diz.**
+### 3. Quando o atendimento vira imutável? **Nunca. A regra foi revista.**
 
-Não há conceito de "fechar prontuário" na resolução. O que ela pede é
-**evolução diária** (Art. 9º, VIII), que é o oposto de documento congelado: é
-registro que cresce.
+A primeira resposta aqui era "ao concluir, fecha; depois só retificação", e
+durou pouco. Caiu por um argumento melhor do dono do produto: *"posso ter
+esquecido de mencionar algo importante sobre o paciente, e uma regra de
+negócio me impediria de enriquecer o prontuário"*.
 
-A regra "imutável após confirmado" é **nossa**, e é boa prática, mas somos nós
-que escolhemos quando ela vale. Proposta: **rascunho enquanto a consulta não
-está concluída; ao concluir, fecha; depois disso, só retificação.** Isso liga a
-imutabilidade a um fato que já existe no sistema — o status `CONCLUIDA` — em
-vez de inventar um botão "confirmar prontuário".
+Ele está certo, e o enquadramento é melhor que o meu. Eu pensava em
+**corrigir** — "escrevi 4,2 e era 4,5". Ele falava de **acrescentar** — o
+nódulo na pata lembrado no carro, o que a tutora contou no portão. Travar isso
+não protege o documento: empobrece.
+
+E é o modelo do próprio CFMV. O Art. 9º, VIII pede **evolução diária** —
+registro que cresce, não documento que fecha. A imutabilidade era invenção
+nossa, e resolvia um problema que a norma não tem.
+
+**O que ficou no lugar:** o prontuário é sempre editável, e cada campo
+alterado depois da conclusão vira linha em `prontuario.alteracao_atendimento`,
+com autor, CRMV, valor antigo e novo — gravada sozinha, sem formulário de
+retificação. O que dá valor ao documento não é a impossibilidade de mudar; é o
+rastro.
+
+**Concluir virou marco**: diz quando o atendimento foi dado por terminado e é
+o que conclui a consulta. Não trava nada.
 
 ### 4. A cópia ao tutor é funcionalidade. **Sim, e maior do que parece.**
 
@@ -237,10 +250,19 @@ limite de tamanho, tipo aceito, e o fato de que laudo é dado pessoal sensível.
 Vale decidir cedo se o arquivo vai para o banco, para disco, ou para
 armazenamento de objeto — mudar depois é migração de dados.
 
-### `prontuario.retificacao`
+### `prontuario.alteracao_atendimento`
 
-`id_atendimento`, texto da correção, motivo, autor e data. **O registro
-original nunca é tocado** — é isso que faz o prontuário valer como documento.
+Uma linha por campo alterado depois da conclusão: `id_atendimento`, autor com
+nome e CRMV, `campo`, `valor_anterior`, `valor_novo`, `criado_em`.
+
+Substituiu a tabela `retificacao`, que exigia dela escrever um motivo. O rastro
+é gravado sozinho — ela edita como edita qualquer coisa, e o sistema anota.
+
+Duas guardas que evitam transformar o rastro em ruído: o banco recusa linha em
+que o valor não mudou, e o service normaliza `BigDecimal` com
+`stripTrailingZeros` antes de comparar — sem isso, `4.500` vindo do banco e
+`4.5` vindo da tela acusariam uma alteração de peso que não houve, a cada
+salvamento.
 
 ### Fora da fase 1: receituário
 
