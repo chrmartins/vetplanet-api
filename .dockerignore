@@ -1,0 +1,23 @@
+# O que não deve entrar no contexto de build da imagem.
+#
+# Sem este arquivo, `railway up` empacota 74 MB — dos quais 65 MB são o
+# `build/` local, que o Dockerfile refaz do zero de qualquer jeito. Além do
+# tempo de upload, saída de build da máquina de alguém dentro da imagem é
+# exatamente como binário velho vai parar em produção.
+
+build/
+.gradle/
+.git/
+.github/
+.idea/
+*.iml
+
+# Documentação e infraestrutura local não são usadas pela imagem.
+docs/
+docker-compose.yml
+README.md
+CLAUDE.md
+
+# Nunca, em hipótese alguma.
+.env
+*.env
