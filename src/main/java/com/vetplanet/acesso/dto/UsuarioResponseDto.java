@@ -19,6 +19,11 @@ public record UsuarioResponseDto(
         PerfilAcesso perfilAcesso,
         /** Nulo para quem não é veterinário. */
         String crmv,
+        /** O rodapé do receituário. Todos opcionais — ver a migração V013. */
+        String telefoneContato,
+        String instagram,
+        String site,
+        String cidadeAtuacao,
         boolean ativo,
         OffsetDateTime criadoEm,
         OffsetDateTime atualizadoEm) {
@@ -30,6 +35,10 @@ public record UsuarioResponseDto(
                 usuario.getEmail(),
                 usuario.getPerfilAcesso(),
                 usuario.getCrmv(),
+                usuario.getTelefoneContato(),
+                usuario.getInstagram(),
+                usuario.getSite(),
+                usuario.getCidadeAtuacao(),
                 usuario.isAtivo(),
                 usuario.getCriadoEm(),
                 usuario.getAtualizadoEm());

@@ -62,6 +62,63 @@ public class UsuarioEntity {
     @Column(name = "crmv")
     private String crmv;
 
+    /**
+     * Contato do rodapé do receituário.
+     *
+     * <p>São dados de vitrine, todos opcionais: quem não tem Instagram não
+     * deve ser impedido de emitir receita, e receituário sem telefone continua
+     * válido — o que a norma exige, nome e CRMV, está acima.
+     */
+    @Column(name = "telefone_contato")
+    private String telefoneContato;
+
+    @Column(name = "instagram")
+    private String instagram;
+
+    @Column(name = "site")
+    private String site;
+
+    @Column(name = "cidade_atuacao")
+    private String cidadeAtuacao;
+
+    /** Preenchido pelo próprio profissional, na tela de dados dele. */
+    public void atualizarDadosDoReceituario(
+            String telefoneContato, String instagram, String site, String cidadeAtuacao) {
+        this.telefoneContato = emBrancoViraNulo(telefoneContato);
+        // O @ é enfeite de exibição, não parte do identificador. Guardar sem
+        // ele evita "@@rafaela" quando a tela acrescenta o próprio.
+        this.instagram = removerArroba(emBrancoViraNulo(instagram));
+        this.site = emBrancoViraNulo(site);
+        this.cidadeAtuacao = emBrancoViraNulo(cidadeAtuacao);
+        marcarAtualizacao();
+    }
+
+    private static String emBrancoViraNulo(String valor) {
+        if (valor == null) return null;
+        String limpo = valor.trim();
+        return limpo.isEmpty() ? null : limpo;
+    }
+
+    private static String removerArroba(String valor) {
+        return valor == null ? null : valor.replaceFirst("^@+", "");
+    }
+
+    public String getTelefoneContato() {
+        return telefoneContato;
+    }
+
+    public String getInstagram() {
+        return instagram;
+    }
+
+    public String getSite() {
+        return site;
+    }
+
+    public String getCidadeAtuacao() {
+        return cidadeAtuacao;
+    }
+
     @Column(name = "ativo", nullable = false)
     private boolean ativo;
 
