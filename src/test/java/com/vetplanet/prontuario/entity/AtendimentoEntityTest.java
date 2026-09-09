@@ -34,6 +34,7 @@ class AtendimentoEntityTest {
                 "Doença periodontal grau 2",
                 null,
                 "Profilaxia dentária.",
+                "Dipirona 500mg, 1 comprimido de 12/12h por 3 dias.",
                 new BigDecimal("4.200"),
                 new BigDecimal("38.6"),
                 null,
@@ -69,7 +70,7 @@ class AtendimentoEntityTest {
         atendimento.registrar(
                 "Rua das Acácias, 210",
                 "Só o que a tutora falou, por enquanto.",
-                null, null, null, null, null, null, null, null);
+                null, null, null, null, null, null, null, null, null);
 
         assertThat(atendimento.getAnamnese()).isEqualTo("Só o que a tutora falou, por enquanto.");
         assertThat(atendimento.podeSerConcluido()).isFalse();
@@ -81,7 +82,7 @@ class AtendimentoEntityTest {
         AtendimentoEntity atendimento = umRascunho();
 
         atendimento.registrar(
-                "Rua das Acácias, 210", "   ", "", null, null, "  ", null, null, null, null);
+                "Rua das Acácias, 210", "   ", "", null, null, "  ", "  ", null, null, null, null);
 
         assertThat(atendimento.getAnamnese()).isNull();
         assertThat(atendimento.getExameClinico()).isNull();
@@ -98,7 +99,7 @@ class AtendimentoEntityTest {
         // "quando houver" — diferente do conclusivo, que é VII.
         atendimento.registrar(
                 "Rua das Acácias, 210", null, "Tártaro em molares.", null, null, null,
-                null, null, null, null);
+                null, null, null, null, null);
         assertThat(atendimento.podeSerConcluido()).isFalse();
 
         preencherOMinimo(atendimento);
