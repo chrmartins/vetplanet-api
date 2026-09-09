@@ -3,6 +3,7 @@ package com.vetplanet.cliente.controller;
 import com.vetplanet.cliente.dto.AnimalResponseDto;
 import com.vetplanet.cliente.dto.AtualizarAnimalRequestDto;
 import com.vetplanet.cliente.dto.AnimalNaListaDto;
+import com.vetplanet.common.dto.PaginaDto;
 import com.vetplanet.cliente.service.AtualizarAnimalService;
 import com.vetplanet.cliente.service.ListarAnimaisService;
 import com.vetplanet.cliente.service.BuscarAnimalService;
@@ -86,10 +87,12 @@ public class AnimalController {
      *     acompanhamento, com tutor ativo
      */
     @GetMapping
-    public java.util.List<AnimalNaListaDto> listar(
+    public PaginaDto<AnimalNaListaDto> listar(
             @RequestParam(required = false) String busca,
-            @RequestParam(defaultValue = "false") boolean incluirInativos) {
-        return listarAnimaisService.listarAnimais(busca, incluirInativos);
+            @RequestParam(defaultValue = "false") boolean incluirInativos,
+            @RequestParam(defaultValue = "1") int pagina,
+            @RequestParam(required = false) Integer tamanho) {
+        return listarAnimaisService.listarAnimais(busca, incluirInativos, pagina, tamanho);
     }
 
     @GetMapping("/{idAnimal}")

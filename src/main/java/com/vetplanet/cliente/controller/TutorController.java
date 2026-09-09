@@ -5,6 +5,7 @@ import com.vetplanet.cliente.dto.AtualizarTutorRequestDto;
 import com.vetplanet.cliente.dto.CriarAnimalRequestDto;
 import com.vetplanet.cliente.dto.CriarTutorRequestDto;
 import com.vetplanet.cliente.dto.TutorResponseDto;
+import com.vetplanet.common.dto.PaginaDto;
 import com.vetplanet.cliente.service.AdicionarAnimalService;
 import com.vetplanet.cliente.service.AtualizarTutorService;
 import com.vetplanet.cliente.service.BuscarTutorService;
@@ -77,10 +78,12 @@ public class TutorController {
      * @param incluirInativos por padrão a lista mostra só quem está ativo
      */
     @GetMapping
-    public List<TutorResponseDto> listar(
+    public PaginaDto<TutorResponseDto> listar(
             @RequestParam(required = false) String busca,
-            @RequestParam(defaultValue = "false") boolean incluirInativos) {
-        return listarTutoresService.listarTutores(busca, incluirInativos);
+            @RequestParam(defaultValue = "false") boolean incluirInativos,
+            @RequestParam(defaultValue = "1") int pagina,
+            @RequestParam(required = false) Integer tamanho) {
+        return listarTutoresService.listarTutores(busca, incluirInativos, pagina, tamanho);
     }
 
     @GetMapping("/{idTutor}")
