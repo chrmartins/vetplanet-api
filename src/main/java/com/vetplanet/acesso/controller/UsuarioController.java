@@ -1,9 +1,11 @@
 package com.vetplanet.acesso.controller;
 
+import com.vetplanet.acesso.dto.AtualizarDadosDoReceituarioRequestDto;
 import com.vetplanet.acesso.dto.AtualizarUsuarioRequestDto;
 import com.vetplanet.acesso.dto.CriarUsuarioRequestDto;
 import com.vetplanet.acesso.dto.TrocarSenhaRequestDto;
 import com.vetplanet.acesso.dto.UsuarioResponseDto;
+import com.vetplanet.acesso.service.AtualizarDadosDoReceituarioService;
 import com.vetplanet.acesso.service.AtualizarUsuarioService;
 import com.vetplanet.acesso.service.BuscarUsuarioService;
 import com.vetplanet.acesso.service.CriarUsuarioService;
@@ -57,6 +59,7 @@ public class UsuarioController {
     private final AtualizarUsuarioService atualizarUsuarioService;
     private final InativarUsuarioService inativarUsuarioService;
     private final TrocarSenhaService trocarSenhaService;
+    private final AtualizarDadosDoReceituarioService atualizarDadosDoReceituarioService;
 
     public UsuarioController(
             CriarUsuarioService criarUsuarioService,
@@ -64,13 +67,15 @@ public class UsuarioController {
             BuscarUsuarioService buscarUsuarioService,
             AtualizarUsuarioService atualizarUsuarioService,
             InativarUsuarioService inativarUsuarioService,
-            TrocarSenhaService trocarSenhaService) {
+            TrocarSenhaService trocarSenhaService,
+            AtualizarDadosDoReceituarioService atualizarDadosDoReceituarioService) {
         this.criarUsuarioService = criarUsuarioService;
         this.listarUsuariosService = listarUsuariosService;
         this.buscarUsuarioService = buscarUsuarioService;
         this.atualizarUsuarioService = atualizarUsuarioService;
         this.inativarUsuarioService = inativarUsuarioService;
         this.trocarSenhaService = trocarSenhaService;
+        this.atualizarDadosDoReceituarioService = atualizarDadosDoReceituarioService;
     }
 
     @Operation(
@@ -113,6 +118,27 @@ public class UsuarioController {
     @PatchMapping("/{idUsuario}/inativar")
     public UsuarioResponseDto inativar(@PathVariable UUID idUsuario) {
         return inativarUsuarioService.inativarUsuario(idUsuario);
+    }
+
+    /**
+     * Os próprios dados de contato — qualquer perfil, sobre a própria conta.
+     *
+     * <p>Como a troca de senha, sobrepõe o {@code @PreAuthorize} da classe: não
+     * faz sentido exigir administrador para alguém preencher o rodapé do
+     * próprio receituário. O alvo vem da sessão, nunca da URL.
+     */
+    @Operation(
+            summary = "Atualizar os próprios dados do receituário",
+            description =
+                    "Telefone, Instagram, site e cidade — o rodapé do papel timbrado. Nome,"
+                            + " e-mail e perfil não entram: mudar o próprio perfil seria escalar"
+                            + " privilégio.")
+    @PutMapping("/atual/receituario")
+    @PreAuthorize("isAuthenticated()")
+    public UsuarioResponseDto atualizarDadosDoReceituario(
+            Principal principal,
+            @Valid @RequestBody AtualizarDadosDoReceituarioRequestDto request) {
+        return atualizarDadosDoReceituarioService.atualizar(principal.getName(), request);
     }
 
     /**
