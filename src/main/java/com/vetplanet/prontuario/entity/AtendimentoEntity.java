@@ -86,6 +86,16 @@ public class AtendimentoEntity {
     @Column(name = "recomendacoes")
     private String recomendacoes;
 
+    /**
+     * Medicamentos prescritos, em texto livre.
+     *
+     * <p>Separado de {@code recomendacoes} porque só a prescrição vira
+     * receituário — orientação clínica e prescrição são documentos diferentes,
+     * com exigências diferentes. Ver a migração {@code V012}.
+     */
+    @Column(name = "prescricao")
+    private String prescricao;
+
     /** Art. 9º, IV — parâmetros MENSURADOS. Todos opcionais: a norma manda
      * registrar o que foi medido, não medir tudo. */
     @Column(name = "peso_kg")
@@ -161,6 +171,7 @@ public class AtendimentoEntity {
             String diagnosticoPresuntivo,
             String diagnosticoConclusivo,
             String recomendacoes,
+            String prescricao,
             BigDecimal pesoKg,
             BigDecimal temperaturaC,
             Integer frequenciaCardiaca,
@@ -171,6 +182,7 @@ public class AtendimentoEntity {
         this.diagnosticoPresuntivo = normalizar(diagnosticoPresuntivo);
         this.diagnosticoConclusivo = normalizar(diagnosticoConclusivo);
         this.recomendacoes = normalizar(recomendacoes);
+        this.prescricao = normalizar(prescricao);
         this.pesoKg = pesoKg;
         this.temperaturaC = temperaturaC;
         this.frequenciaCardiaca = frequenciaCardiaca;
@@ -258,6 +270,10 @@ public class AtendimentoEntity {
 
     public String getRecomendacoes() {
         return recomendacoes;
+    }
+
+    public String getPrescricao() {
+        return prescricao;
     }
 
     public BigDecimal getPesoKg() {
