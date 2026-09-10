@@ -79,6 +79,7 @@ public class RegistrarAtendimentoService {
                 request.diagnosticoPresuntivo(),
                 request.diagnosticoConclusivo(),
                 request.recomendacoes(),
+                request.prescricao(),
                 request.pesoKg(),
                 request.temperaturaC(),
                 request.frequenciaCardiaca(),
@@ -105,6 +106,7 @@ public class RegistrarAtendimentoService {
         valores.put("diagnosticoPresuntivo", atendimento.getDiagnosticoPresuntivo());
         valores.put("diagnosticoConclusivo", atendimento.getDiagnosticoConclusivo());
         valores.put("recomendacoes", atendimento.getRecomendacoes());
+        valores.put("prescricao", atendimento.getPrescricao());
         valores.put("pesoKg", texto(atendimento.getPesoKg()));
         valores.put("temperaturaC", texto(atendimento.getTemperaturaC()));
         valores.put("frequenciaCardiaca", texto(atendimento.getFrequenciaCardiaca()));

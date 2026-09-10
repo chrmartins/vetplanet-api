@@ -1,5 +1,8 @@
 package com.vetplanet.cliente.service;
 
+import java.time.Instant;
+import java.util.Collection;
+import java.util.Map;
 import java.util.UUID;
 
 /**
@@ -21,4 +24,20 @@ import java.util.UUID;
 public interface HistoricoDoAnimal {
 
     boolean temHistorico(UUID idAnimal);
+
+    /**
+     * Quando cada um destes animais foi atendido pela última vez.
+     *
+     * <p>Serve para ordenar a lista de animais por quem foi visto mais
+     * recentemente, que é a ordem em que a veterinária pensa na clientela.
+     *
+     * <p><b>Em lote, e não um por animal.</b> Uma consulta por linha
+     * transformaria a lista em N+1 — e a lista existe justamente para varrer
+     * muitos de uma vez.
+     *
+     * <p>Animal que nunca foi atendido simplesmente <b>não aparece no mapa</b>,
+     * em vez de aparecer com nulo. Quem chama decide o que fazer com a ausência
+     * sem precisar distinguir "não veio" de "veio vazio".
+     */
+    Map<UUID, Instant> ultimoAtendimentoPorAnimal(Collection<UUID> idsDeAnimais);
 }

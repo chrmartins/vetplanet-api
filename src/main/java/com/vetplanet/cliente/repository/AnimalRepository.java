@@ -68,4 +68,13 @@ public interface AnimalRepository extends JpaRepository<AnimalEntity, UUID> {
             String trecho,
             java.util.Collection<com.vetplanet.cliente.entity.SituacaoAnimal> situacoes,
             boolean incluirInativos);
+
+    /**
+     * Os animais de vários tutores de uma vez.
+     *
+     * <p>Substitui a contagem por tutor que a lista fazia — uma consulta por
+     * linha — e ainda dá os ids necessários para descobrir o último atendimento
+     * de cada tutor em lote.
+     */
+    List<AnimalEntity> findByTutorIdIn(java.util.Collection<UUID> idsDeTutores);
 }

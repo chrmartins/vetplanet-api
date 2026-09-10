@@ -29,6 +29,7 @@ public record RegistrarAtendimentoRequestDto(
         @Size(max = 500) String diagnosticoPresuntivo,
         @Size(max = 500) String diagnosticoConclusivo,
         @Size(max = 5000) String recomendacoes,
+        @Size(max = 5000) String prescricao,
         @DecimalMin(value = "0.001", message = "Peso inválido.")
                 @DecimalMax(value = "999.999", message = "Peso inválido.")
                 BigDecimal pesoKg,
